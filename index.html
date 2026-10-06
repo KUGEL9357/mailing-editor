@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>עורך דיוור AutoSuccess</title>
 <link rel="icon" href="icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#4a9fd1">
 <link rel="stylesheet" href="fonts/fonts.css">
 <style>
 /* Layout: editor workbench — controls column (right, RTL) + live newsletter proof at real 600px width (left) */
@@ -84,6 +87,7 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
   <h1>עורך דיוור AutoSuccess<small>באנר עליון וכל בלוקי הדיוור. כל ייצוא ב-1200px (פי 2 מרוחב 600).</small></h1>
   <div class="actions">
     <span id="status" class="status" role="status"></span>
+    <button id="installBtn" type="button" hidden>התקן כאפליקציה</button>
     <button id="saveBtn" class="primary" type="button">שמור שינויים</button>
   </div>
 </header>
@@ -832,6 +836,13 @@ $("saveBtn").addEventListener("click",async()=>{
 });
 addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();}});
 
+/* ---------- installable app (own window + own taskbar icon) ---------- */
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+let installEvt=null;
+addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); installEvt=e; $("installBtn").hidden=false; });
+addEventListener("appinstalled",()=>{ installEvt=null; $("installBtn").hidden=true; setStatus("העורך הותקן כאפליקציה","ok"); });
+$("installBtn").addEventListener("click",async()=>{ if(!installEvt) return; installEvt.prompt(); await installEvt.userChoice.catch(()=>{}); installEvt=null; $("installBtn").hidden=true; });
+
 /* ---------- connection banner ---------- */
 async function health(){
   let ok=false; try{ok=(await fetch("health",{cache:"no-store"})).ok;}catch(e){}
@@ -874,6 +885,7 @@ function migrate(s){
     for(const k of Object.keys(draft.designs)) if(draft.designs[k].blocks.some(unsaved)) draft.designs[k].blocks=state.designs[k].blocks;
     state=draft; dirty=true; setStatus("נטענה טיוטה שלא נשמרה"); } }catch(e){}
   fillForm(); setView(view); health(); smInit();
+  if(new URLSearchParams(location.search).has("desktop")) history.replaceState(null,"",location.pathname);
 })();
 </script>
 </body>

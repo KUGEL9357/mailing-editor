@@ -38,7 +38,7 @@ if (-not $browser) { Write-Host 'Chrome / Edge not found'; exit 1 }
 # 3) Copy icon (and melody) to a fixed per-user folder, so moving/deleting the ZIP folder doesn't break the icon
 $dir = Join-Path $env:LOCALAPPDATA 'MailingEditor'
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
-$icon = Join-Path $dir 'icon.ico'
+$icon = Join-Path $dir 'icon-pen.ico'
 # files can vanish between the ZIP and the user's folder (filter / antivirus) — never let that stop the install
 $hasIcon = Test-Path -LiteralPath (Join-Path $assets 'icon.ico')
 if ($hasIcon) { Copy-Item -LiteralPath (Join-Path $assets 'icon.ico') -Destination $icon -Force } else { Write-Host 'Note: icon.ico is missing - using the browser icon.' }
