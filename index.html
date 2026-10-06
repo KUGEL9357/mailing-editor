@@ -176,7 +176,7 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
           <button id="smCreate" class="primary" type="button">צור דיוור בסמוב</button>
           <button id="smChangeKey" class="small" type="button">החלף מפתח</button>
         </div>
-        <p class="hint">נוצר דיוור שמור (לא נשלח). טקסטים וכפתורים נכנסים כטקסט חי, השאר כתמונות שמתארחות ב-autosuccess.cc. בודקים בסמוב ושולחים משם.</p>
+        <p class="hint">נוצר דיוור שמור (לא נשלח). כל הטקסטים והכפתורים נכנסים כטקסט אמיתי; רק לוגו, תמונות וקישוטים הם תמונות (מ-autosuccess.cc), ותמונה שלא השתנתה שומרת על אותה כתובת. בודקים בסמוב ושולחים משם.</p>
       </div>
       <p class="status" id="smStatus" role="status"></p>
     </div>
@@ -561,7 +561,7 @@ async function renderBlock(blk){
 }
 
 /* ---------- banner ---------- */
-async function drawBanner(canvas){
+async function drawBanner(canvas,{bare=false}={}){
   const b = state.banner, ctx = canvas.getContext("2d");
   await document.fonts.load(`700 48px "${b.font}"`); await document.fonts.load(`400 32px "${b.font}"`);
   const logo = await loadImg("logo.png");
@@ -574,6 +574,7 @@ async function drawBanner(canvas){
     ctx.beginPath(); ctx.moveTo(280,188); ctx.lineTo(112,188); ctx.quadraticCurveTo(86,188,86,214); ctx.lineTo(86,236); ctx.stroke();
     ctx.fillStyle=b.brand; ctx.beginPath(); ctx.arc(88,240,14,0,Math.PI*2); ctx.fill();
   }
+  if(bare){ ctx.fillStyle=b.brand; ctx.fillRect(0,388,1200,12); ctx.restore(); return; }
   ctx.drawImage(logo,884,66,288,252);
   ctx.direction="rtl"; ctx.textAlign="right"; ctx.textBaseline="top";
   const Rx=868, maxW=560;
@@ -714,49 +715,132 @@ $("dlAll").addEventListener("click",async()=>save(await fullCanvas(),`diyur-${is
 async function downloadBlock(i){ save(await renderBlock(cur()[i]), `diyur-${issueTag()}-${String(i+1).padStart(2,"0")}-${slug(cur()[i].name)}.png`); }
 
 /* ---------- email for Smoove ----------
-   Text blocks go in as live text (readable even where images are blocked), buttons as real links,
-   everything else as a 1200px image shown at 600px. */
+   Every text is real email text, so NetFree and "block images" never hide the words, and a new issue
+   creates no new images. Images are only what rarely changes (logos, photos, decorations); the server
+   names them by content, so an unchanged image keeps its address and is approved by NetFree once. */
 const esc = t => String(t??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const escBr = t => esc(t).replace(/\n/g,"<br>");
-const FONT = "Arial,Helvetica,sans-serif";
+const FONT = () => `'${state.banner.font}',Arial,Helvetica,sans-serif`;   // Arial where the client has no web fonts (Gmail, Outlook)
+const FONT_BASE = "https://autosuccess.cc/newsletter-img/fonts/";
 const safeUrl = u => /^(https?:\/\/|mailto:)/i.test(String(u||"").trim()) ? String(u).trim() : "https://autosuccess.cc";
-const altOf = blk => Object.values(blk.f||{}).filter(v=>typeof v==="string" && !/^https?:/.test(v)).join(" · ").replaceAll("{גיליון}",state.banner.issue).replace(/\s+/g," ").slice(0,300);
-function td(inner, pad, extra=""){ return `<tr><td dir="rtl" style="padding:${pad};font-family:${FONT};color:${state.banner.ink};text-align:right;${extra}">${inner}</td></tr>`; }
-function buttonHtml(text, link, size){
-  const b=state.banner;
-  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td align="center" bgcolor="${b.brand}" style="border-radius:28px;background:${b.brand}">`+
-    `<a href="${esc(safeUrl(link))}" target="_blank" style="display:inline-block;padding:16px 36px;font-family:${FONT};font-size:${size}px;font-weight:bold;line-height:1.3;color:#ffffff;text-decoration:none;border-radius:28px">${esc(text)}</a></td></tr></table>`;
-}
-const LIVE = {
-  text: f => td((f.title?`<h2 style="margin:0 0 10px;font-size:28px;line-height:1.2;font-weight:bold;color:${state.banner.ink}">${esc(f.title)}</h2><div style="width:70px;height:3px;line-height:3px;font-size:0;background:${state.banner.brand};margin:0 0 14px auto"></div>`:"")+
-               `<p style="margin:0;font-size:18px;line-height:1.5">${escBr(f.text)}</p>`, "20px 24px 20px"),
-  closing: f => td(`<p style="margin:0;font-size:18px;line-height:1.5">${escBr(f.text)}</p>`, "19px 24px 21px"),
-  signature: f => td(`<p style="margin:0;font-size:18px;line-height:1.4;font-weight:bold;color:${state.banner.brand}">${escBr(f.text)}</p>`, "22px 24px 28px"),
-  gpara: f => td(`<p style="margin:0;font-size:16px;line-height:1.6">${escBr(f.text)}</p>`, "20px 40px 20px"),
-  cta: f => td((f.title?`<p style="margin:0 0 16px;font-size:22px;line-height:1.4;font-weight:bold;text-align:center">${esc(f.title)}</p>`:"")+buttonHtml(f.button,f.link,18), "17px 24px 19px", "text-align:center;"),
-  gcta: f => td(buttonHtml(f.button,f.link,21), "22px 24px 22px", "text-align:center;")
-};
+
 async function canvasBlob(c){ return new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/png")); }
 async function publishImage(c){
   const {url}=await call("api/smoove/image",{method:"POST",headers:{"content-type":"image/png"},body:await canvasBlob(c)});
   return url;
 }
+let pubCount=0, pubProgress=()=>{};
+async function art(w,h,draw){   // a small static picture, drawn at 2x and published
+  const c=document.createElement("canvas"); c.width=Math.round(w*S); c.height=Math.round(h*S);
+  await draw(c.getContext("2d")); pubProgress(`מעלה תמונות (${++pubCount})…`);
+  return publishImage(c);
+}
+async function logoArt(bg){ const logo=await loadImg("logo.png"); return art(96,92,ctx=>{ rect(ctx,0,0,96,92,0,bg); logoBox(ctx,logo,0,0,96,92); }); }
+async function iconBox(size,radius,pad){ const icon=await loadImg("assets/grid-icon.png");
+  return art(size,size,ctx=>{ rect(ctx,0,0,size,size,radius,"#ffffff"); blend(ctx,icon,pad,pad,size-2*pad,size-2*pad); }); }
+async function photoArt(src,w,h){ const img=await loadImg(src); return art(w,h,ctx=>cover(ctx,img,0,0,w,h)); }
+
+const img = (url,w,h,alt="",style="") => `<img src="${url}" width="${w}" height="${h}" alt="${esc(alt)}" style="display:block;width:${w}px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;${style}">`;
+function P(text,{size=16,weight=400,color,lh=1.5,align="right",mt=0,extra=""}={}){
+  if(!String(text??"").trim()) return "";
+  return `<p style="margin:${mt}px 0 0;font-family:${FONT()};font-size:${size}px;line-height:${lh};font-weight:${weight};color:${color||state.banner.ink};text-align:${align};${extra}">${escBr(text)}</p>`;
+}
+const pillH = (label,bg,fg,size=13,h=23) => String(label??"").trim()
+  ? `<span style="display:inline-block;background:${bg};color:${fg};font-family:${FONT()};font-size:${size}px;font-weight:bold;line-height:${h}px;padding:0 ${Math.round(h*0.6)}px;border-radius:${h/2}px">${esc(label)}</span>` : "";
+const tr = (inner,pad="0",extra="") => `<tr><td dir="rtl" style="padding:${pad};text-align:right;${extra}">${inner}</td></tr>`;
+const card = (inner,{bg,radius,pad,border=""}) =>
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;background:${bg};border-radius:${radius}px;${border}"><tr><td dir="rtl" style="padding:${pad};text-align:right">${inner}</td></tr></table>`;
+// columns, right to left; each cell: [html, style]
+const cols = cells => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl"><tr>${cells.map(([h,st])=>`<td dir="rtl" style="${st}">${h}</td>`).join("")}</tr></table>`;
+const button = (text,link,size) => { const b=state.banner;
+  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td align="center" bgcolor="${b.brand}" style="border-radius:28px;background:${b.brand}">`+
+    `<a href="${esc(safeUrl(link))}" target="_blank" style="display:inline-block;padding:16px 36px;font-family:${FONT()};font-size:${size}px;font-weight:bold;line-height:1.3;color:#ffffff;text-decoration:none;border-radius:28px">${esc(text)}</a></td></tr></table>`; };
+
+const MAIL = {
+  async banner(){
+    const b=state.banner, bg=document.createElement("canvas"); bg.width=1200; bg.height=400; await drawBanner(bg,{bare:true});
+    const bgUrl=await (async()=>{ pubProgress(`מעלה תמונות (${++pubCount})…`); return publishImage(bg); })();
+    const logo=await loadImg("logo.png"), logoUrl=await art(144,126,ctx=>{ rect(ctx,0,0,144,126,0,"#ffffff"); ctx.drawImage(logo,0,0,144*S,126*S); });
+    return `<tr><td background="${bgUrl}" bgcolor="#ffffff" height="200" style="background:#ffffff url('${bgUrl}') no-repeat 0 0;background-size:600px 200px;padding:0;height:200px">`+
+      cols([[img(logoUrl,144,126,"AutoSuccess"),"width:144px;padding:33px 14px 0 8px;vertical-align:top"],
+            [P(b.title,{size:24,weight:700,lh:1.2})+P(b.slogan,{size:16,color:b.brand,mt:14})+`<div style="margin-top:16px">${pillH(pillText(b),b.pill,b.ink,13,30)}</div>`,"vertical-align:top;padding-top:44px"],
+            ["","width:134px"]])+`</td></tr>`;
+  },
+  async header(){ const b=state.banner;
+    return tr(card(cols([[img(await logoArt("#ffffff"),96,92,"AutoSuccess"),"width:96px;vertical-align:middle"],["",""],
+      [P(`דיוור #${b.issue}\n${dateText(b)}`,{size:14,lh:1.5}),"width:200px;vertical-align:middle"]]),
+      {bg:"#ffffff",radius:16,pad:"6px 8px 6px 24px",border:`border-radius:16px 16px 0 0;border-bottom:3px solid ${b.brand};`}),"24px 24px 15px"); },
+  async hero(f,blk){ const b=state.banner;
+    const deco = b.decor ? img(await art(136,28,ctx=>{ curve(ctx,6,1,"M128,2 H18 A16,16 0 0 0 2,18",b.brand); dot(ctx,8,19,7,b.brand); }),136,28,"","margin-top:22px") : "";
+    const photo = blk.photo ? img(await photoArt(blk.photo,196,244),196,244,f.title) : "";
+    return tr(card(cols([[pillH(f.tag,b.pill,b.ink,14,34)+P(f.title,{size:31,weight:700,lh:1.15,mt:14})+P(f.text,{size:17,lh:1.4,mt:18})+deco,"vertical-align:top"],
+      ["","width:12px"],[photo,"width:196px;vertical-align:top"]]),{bg:b.soft,radius:24,pad:"28px 24px"}),"16px 24px 20px"); },
+  async text(f){ const b=state.banner;
+    return tr((f.title?P(f.title,{size:28,weight:700,lh:1.2})+`<div style="width:70px;height:3px;line-height:3px;font-size:0;background:${b.brand};margin:11px 0 14px auto"></div>`:"")+P(f.text,{size:18}),"20px 24px"); },
+  async image(f,blk){ return tr((blk.photo?img(await photoArt(blk.photo,552,296),552,296,f.caption):"")+P(f.caption,{size:14,color:MUTED,mt:10}),"20px 24px 18px"); },
+  async steps(f){ const b=state.banner;
+    const items=[1,2,3].map(n=>[f["s"+n],f["d"+n]]).filter(([s,d])=>(s||"").trim()||(d||"").trim());
+    return tr(P(f.title,{size:26,weight:700,lh:1.4})+items.map(([s,d],i)=>`<div style="margin-top:${i?20:14}px">`+cols([
+      [`<div style="width:40px;height:40px;line-height:40px;border-radius:20px;background:${b.brand};color:#ffffff;font-family:${FONT()};font-size:18px;font-weight:bold;text-align:center">${i+1}</div>`,"width:40px;vertical-align:top"],
+      ["","width:16px"],[P(s,{size:20,weight:700,lh:1.4})+P(d,{size:16,lh:1.4}),"vertical-align:top"]])+`</div>`).join(""),"20px 24px 16px"); },
+  async insight(f){ const b=state.banner;
+    const deco = b.decor ? `<div style="text-align:left;margin-top:16px">${img(await art(108,28,ctx=>{ curve(ctx,1,1,"M0,2 H82 A16,16 0 0 1 98,18",b.brand); dot(ctx,99,19,7,b.brand); }),108,28,"","display:inline-block")}</div>` : "";
+    return tr(card(P(f.label,{size:13,weight:700,color:b.brand})+P(f.title,{size:25,weight:700,lh:1.4,mt:4})+P(f.text,{size:17,lh:1.45,mt:8})+deco,{bg:b.soft,radius:20,pad:"22px 24px 20px"}),"17px 24px"); },
+  async cta(f){ return tr(P(f.title,{size:22,weight:700,lh:1.4,align:"center"})+`<div style="margin-top:14px">${button(f.button,f.link,18)}</div>`,"17px 24px 19px","text-align:center;"); },
+  async closing(f){ return tr(P(f.text,{size:18}),"19px 24px 21px"); },
+  async signature(f){ return tr(P(f.text,{size:18,weight:700,lh:1.4,color:state.banner.brand}),"22px 24px 28px"); },
+  async footer(f){ const b=state.banner, line=`<div style="height:2px;line-height:2px;font-size:0;background:${b.soft}"></div>`;
+    return tr(line+`<div style="margin:14px 0 10px">${img(await logoArt(PAGE_BG),96,92,"AutoSuccess","margin:0 auto")}</div>`+
+      P(f.tagline,{size:16,weight:700,lh:1.4,align:"center"})+P(f.links,{size:12,color:MUTED,align:"center",mt:8})+`<div style="margin-top:20px">${line}</div>`,"20px 24px 46px"); },
+
+  /* ----- "גריד דיוור תוכן" ----- */
+  async gheader(f){ const b=state.banner;
+    const deco = b.decor ? `<div style="text-align:left;margin-top:6px">${img(await art(160,40,ctx=>wave(ctx,0,0,0.5,"M0,70 C60,70 90,10 160,10 C230,10 260,70 320,70",6,b.brand,0.45)),160,40,"","display:inline-block")}</div>` : "";
+    return tr(card(cols([[img(await iconBox(95,16,7.5),95,95,"AutoSuccess"),"width:95px;vertical-align:middle"],["","width:22px"],
+      [P(f.title,{size:30,weight:700,lh:1.2})+P((f.subtitle||"").replaceAll("{גיליון}",b.issue),{size:14,lh:1.4,mt:10})+deco,"vertical-align:middle"]]),
+      {bg:b.soft,radius:18,pad:"26px 17px 10px 20px"}),"15px 20px"); },
+  async gpara(f){ return tr(P(f.text,{size:16,lh:1.6}),"20px 40px"); },
+  async gtip(f){ const b=state.banner;
+    return tr(card(cols([[P(f.num,{size:60,weight:700,lh:1,color:b.brand,align:"center"}),"width:85px;vertical-align:middle"],["","width:10px"],
+      [pillH(f.tag,b.ink,"#ffffff")+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"]]),{bg:b.soft,radius:14,pad:"22px 20px"}),"10px 20px"); },
+  async gtool(f,blk){ const b=state.banner;
+    let logo;
+    if(blk.photo){ const l=await loadImg(blk.photo); logo=img(await art(75,75,ctx=>{ rect(ctx,0,0,75,75,14,"#ffffff");
+        const r=Math.min(61/l.naturalWidth,61/l.naturalHeight), w=l.naturalWidth*r, h=l.naturalHeight*r; ctx.drawImage(l,(37.5-w/2)*S,(37.5-h/2)*S,w*S,h*S); }),75,75,f.title); }
+    else logo=`<div style="width:75px;height:75px;line-height:75px;border-radius:14px;background:#ffffff;color:#9ca3af;font-family:${FONT()};font-size:11px;text-align:center">${esc(f.logoText)}</div>`;
+    return tr(card(cols([[logo,"width:75px;vertical-align:middle"],["","width:15px"],
+      [pillH(f.tag,"#ffffff",b.ink)+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"]]),{bg:b.soft,radius:14,pad:"22px 20px"}),"10px 20px"); },
+  async gstory(f){ const b=state.banner;
+    return tr(card(cols([[P("”",{size:110,weight:700,lh:0.75,color:b.brand,align:"center",extra:"height:60px;overflow:hidden"}),"width:75px;vertical-align:middle"],["","width:15px"],
+      [pillH(f.tag,b.pill,b.ink)+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"]]),
+      {bg:"#ffffff",radius:14,pad:"20px 18px",border:`border:2px solid ${b.brand};`}),"10px 20px"); },
+  async gdivider(){ const c=await renderBlock({type:"gdivider",f:{}}); pubProgress(`מעלה תמונות (${++pubCount})…`);
+    return tr(img(await publishImage(c),600,75,"")); },
+  async gcta(f){ return tr(button(f.button,f.link,21),"22px 24px","text-align:center;"); },
+  async gfooter(f){ const b=state.banner, site=String(f.url||"").trim();
+    const url = site ? `<a href="${esc(safeUrl(/^https?:/i.test(site)?site:"https://"+site))}" target="_blank" style="color:${b.ink};text-decoration:none">${esc(site)}</a>` : "";
+    return `<tr><td dir="rtl" bgcolor="${b.soft}" style="background:${b.soft};border-top:4px solid ${b.pill};padding:7px 20px 22px;text-align:center">`+
+      img(await iconBox(57,12,6),57,57,"AutoSuccess","margin:0 auto")+P(f.name,{size:17,weight:700,lh:1.4,align:"center",mt:6})+
+      P(f.tagline,{size:13,lh:1.4,align:"center",mt:4})+(url?`<p style="margin:6px 0 0;font-family:${FONT()};font-size:12px;line-height:1.4;text-align:center;opacity:.75">${url}</p>`:"")+`</td></tr>`; },
+  async upload(f,blk){ const c=await renderBlock(blk); pubProgress(`מעלה תמונות (${++pubCount})…`); return tr(img(await publishImage(c),600,Math.round(c.height/S),blk.name)); }
+};
+
+async function fontFaceCss(){
+  try{
+    const css=await (await fetch("fonts/fonts.css")).text();
+    return (css.match(/@font-face\s*\{[^}]*\}/g)||[]).filter(r=>r.includes(`'${state.banner.font}'`))
+      .map(r=>r.replace(/url\(([^)]+)\)/, (m,u)=>`url(${FONT_BASE}${u.replace(/^.*\//,"")})`)).join("\n");
+  }catch(e){ return ""; }
+}
 async function buildEmail(subject, progress){
-  const rows=[], imgs=[];
-  if(view==="master"){ rows.push(null); imgs.push({canvas:$("bannerCanvas"), alt:`${state.banner.title} · ${pillText(state.banner)}`, at:0}); }
-  for(const blk of cur()){
-    if(LIVE[blk.type]) rows.push(LIVE[blk.type](blk.f||{}));
-    else { rows.push(null); imgs.push({canvas:await renderBlock(blk), alt:altOf(blk)||blk.name, at:rows.length-1}); }
-  }
-  let n=0;
-  for(const im of imgs){
-    progress(`מעלה תמונות ${++n}/${imgs.length}…`);
-    const url=await publishImage(im.canvas);
-    rows[im.at]=`<tr><td style="padding:0;line-height:0;font-size:0"><img src="${url}" alt="${esc(im.alt)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none"></td></tr>`;
-  }
-  return `<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>`+
-    `<body style="margin:0;padding:0;background:#f8fafb"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafb"><tr><td align="center">`+
-    `<table role="presentation" dir="rtl" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#f8fafb">${rows.join("")}</table>`+
+  pubCount=0; pubProgress=progress;
+  const rows=[];
+  if(view==="master") rows.push(await MAIL.banner());
+  for(const blk of cur()) rows.push(await MAIL[blk.type](blk.f||{},blk));
+  return `<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title>`+
+    `<style>${await fontFaceCss()}\nbody{margin:0;padding:0}</style></head>`+
+    `<body style="margin:0;padding:0;background:${PAGE_BG}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAGE_BG}"><tr><td align="center">`+
+    `<table role="presentation" dir="rtl" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:${PAGE_BG}">${rows.join("")}</table>`+
     `</td></tr></table></body></html>`;
 }
 
