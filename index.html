@@ -488,9 +488,10 @@ const R = {
   },
   async gdivider(ctx){
     const b=state.banner;
-    ctx.save(); ctx.globalAlpha=0.35; rect(ctx,70,24,180,2,1,b.brand); rect(ctx,350,24,180,2,1,b.brand); ctx.restore();
-    if(b.decor) wave(ctx,260,10,0.5,"M0,30 C30,30 45,6 80,6 C115,6 130,30 160,30",5,b.brand,1);
-    return 50;
+    // spacing as in the Canva sample: the divider sits 64px (1200 scale) under the paragraph above it
+    ctx.save(); ctx.globalAlpha=0.35; rect(ctx,70,44,180,2,1,b.brand); rect(ctx,350,44,180,2,1,b.brand); ctx.restore();
+    if(b.decor) wave(ctx,260,30,0.5,"M0,30 C30,30 45,6 80,6 C115,6 130,30 160,30",5,b.brand,1);
+    return 75;
   },
   async gcta(ctx,f){
     const b=state.banner;
