@@ -1,0 +1,27 @@
+{
+  "banner": {
+    "issue": "01",
+    "date": "2026-10-06",
+    "dateFormat": "month",
+    "title": "הניוזלטר של AutoSuccess",
+    "slogan": "אוטומציה שמבינה אותך, עסק שמרוויח.",
+    "font": "Arimo",
+    "brand": "#4a9fd1",
+    "ink": "#12384f",
+    "pill": "#f4c7a6",
+    "soft": "#ddf3fa",
+    "decor": true
+  },
+  "blocks": [
+    { "name": "Header", "src": "blocks/01-header.png", "live": "header" },
+    { "name": "Hero", "src": "blocks/02-hero.png" },
+    { "name": "טקסט", "src": "blocks/03-text.png" },
+    { "name": "תמונה", "src": "blocks/04-image.png" },
+    { "name": "3 שלבים", "src": "blocks/05-steps.png" },
+    { "name": "תובנה", "src": "blocks/06-insight.png" },
+    { "name": "CTA", "src": "blocks/07-cta.png" },
+    { "name": "טקסט סיום", "src": "blocks/08-closing-text.png" },
+    { "name": "חתימה", "src": "blocks/09-signature.png" },
+    { "name": "Footer", "src": "blocks/10-footer.png" }
+  ]
+}

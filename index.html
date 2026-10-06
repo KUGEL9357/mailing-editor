@@ -1,0 +1,361 @@
+<title>עורך דיוור AutoSuccess</title>
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* Layout: editor workbench — controls column (right, RTL) + live newsletter proof at real 600px width (left) */
+:root{
+  --bg:#eef3f6; --panel:#ffffff; --fg:#12384f; --muted:#5f7a8c; --line:#d5e2ea;
+  --brand:#4a9fd1; --brand-ink:#ffffff; --warm:#f4c7a6; --danger:#c2412d; --ok:#2f8a57;
+  --paper-shadow:0 1px 2px rgba(18,56,79,.08),0 8px 28px rgba(18,56,79,.10);
+  --ui:"Heebo","Arial Hebrew",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1b24; --panel:#132733; --fg:#e3eef4; --muted:#93acbb; --line:#24404f;
+  --brand:#5fb1e0; --brand-ink:#0b1a22; --warm:#e9b48f; --danger:#ef7a64; --ok:#5cc28b;
+  --paper-shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1b24; --panel:#132733; --fg:#e3eef4; --muted:#93acbb; --line:#24404f;
+  --brand:#5fb1e0; --brand-ink:#0b1a22; --warm:#e9b48f; --danger:#ef7a64; --ok:#5cc28b;
+  --paper-shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.35); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--ui);direction:rtl;padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 640px;gap:28px;align-items:start}
+@media (max-width:1000px){.wrap{grid-template-columns:minmax(0,1fr)}}
+header.top{max-width:1180px;margin:0 auto 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+h1{font-size:22px;margin:0;font-weight:800;letter-spacing:-.01em}
+h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
+h2{font-size:13px;margin:0 0 12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px;min-width:0}
+.controls{display:grid;gap:18px;min-width:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.row{grid-template-columns:1fr}}
+label{display:grid;gap:4px;font-size:13px;font-weight:500;color:var(--muted)}
+input[type=text],input[type=date],select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+input[type=color]{width:100%;height:38px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:3px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.check{display:flex;gap:8px;align-items:center;color:var(--fg);font-weight:400}
+button{font:inherit;font-weight:600;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:8px 16px;cursor:pointer}
+button:hover{border-color:var(--brand)}
+button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+button.small{padding:4px 10px;font-size:13px;font-weight:500}
+button.danger{color:var(--danger)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.status{font-size:13px;color:var(--muted);min-height:1.5em}
+.status.ok{color:var(--ok)} .status.err{color:var(--danger)}
+.pill-preview{font-size:13px;color:var(--muted)}
+.pill-preview b{color:var(--fg)}
+ol.blocks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+ol.blocks li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg)}
+ol.blocks img{width:72px;height:44px;object-fit:cover;object-position:top;border-radius:6px;border:1px solid var(--line);background:#fff}
+ol.blocks .meta{display:grid;gap:6px;min-width:0}
+ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:11px;font-weight:700;color:var(--brand);border:1px solid var(--brand);border-radius:999px;padding:0 6px;margin-inline-start:6px;white-space:nowrap}
+.proof{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:grid;gap:10px;min-width:0}
+.proof .sheet{background:#f8fafb;box-shadow:var(--paper-shadow);border-radius:4px;overflow:hidden;max-height:calc(100vh - 120px);overflow-y:auto}
+.proof .sheet > *{display:block;width:100%;height:auto}
+.proof .label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.hint{font-size:12px;color:var(--muted)}
+.dirty-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warm);margin-inline-end:6px;vertical-align:middle}
+.offline{position:fixed;inset-inline:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--danger);color:#fff;text-align:center;font-weight:600}
+@media (prefers-reduced-motion:no-preference){button{transition:border-color .15s}}
+</style>
+
+<header class="top">
+  <h1>עורך דיוור AutoSuccess<small>באנר עליון, Header ובלוקים לדיוור. כל ייצוא ב-1200px (פי 2 מרוחב 600).</small></h1>
+  <div class="actions">
+    <span id="status" class="status" role="status"></span>
+    <button id="saveBtn" class="primary" type="button">שמור שינויים</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="controls">
+    <div class="panel">
+      <h2>באנר עליון</h2>
+      <div class="row">
+        <label for="issue">מספר דיוור<input id="issue" type="text" inputmode="numeric" autocomplete="off"></label>
+        <label for="date">תאריך הדיוור<input id="date" type="date"></label>
+      </div>
+      <div class="row">
+        <label for="dateFormat">תצוגת תאריך
+          <select id="dateFormat">
+            <option value="month">חודש ושנה</option>
+            <option value="full">תאריך מלא</option>
+            <option value="custom">טקסט חופשי</option>
+          </select>
+        </label>
+        <label for="customDate" id="customWrap" hidden>טקסט תאריך<input id="customDate" type="text" autocomplete="off"></label>
+      </div>
+      <p class="pill-preview">יופיע בתגית: <b id="pillText"></b></p>
+      <label for="title">כותרת<input id="title" type="text" autocomplete="off"></label>
+      <label for="slogan">סלוגן<input id="slogan" type="text" autocomplete="off"></label>
+    </div>
+
+    <div class="panel">
+      <h2>עיצוב</h2>
+      <div class="row">
+        <label for="font">פונט
+          <select id="font">
+            <option value="Arimo">Arimo (כמו הבלוקים מקנבה)</option>
+            <option value="Heebo">Heebo (פונט המותג)</option>
+            <option value="Rubik">Rubik</option>
+            <option value="Assistant">Assistant</option>
+          </select>
+        </label>
+        <label class="check" for="decor"><input id="decor" type="checkbox"> קישוטים (עיגול, קו ונקודה)</label>
+      </div>
+      <div class="row">
+        <label for="brand">צבע מותג<input id="brand" type="color"></label>
+        <label for="ink">צבע טקסט<input id="ink" type="color"></label>
+      </div>
+      <div class="row">
+        <label for="pill">צבע תגית<input id="pill" type="color"></label>
+        <label for="soft">צבע עיגול רקע<input id="soft" type="color"></label>
+      </div>
+      <div class="actions"><button id="resetColors" class="small" type="button">החזר צבעי מותג</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>בלוקים בדיוור</h2>
+      <p class="hint">החלפת תמונה: “החלף” ובוחרים קובץ. רוחב מומלץ 1200px. ה-Header מתעדכן לבד עם מספר ותאריך הדיוור.</p>
+      <ol class="blocks" id="blockList"></ol>
+      <div class="actions">
+        <button id="addBlock" type="button">+ הוסף בלוק מתמונה</button>
+        <input id="filePick" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>ייצוא</h2>
+      <div class="actions">
+        <button id="dlBanner" class="primary" type="button">הורד באנר PNG</button>
+        <button id="dlHeader" type="button">הורד Header PNG</button>
+        <button id="dlAll" type="button">הורד דיוור מלא PNG</button>
+      </div>
+      <p class="hint" id="dlHint"></p>
+    </div>
+  </section>
+
+  <aside class="proof" aria-label="תצוגה מקדימה">
+    <div class="label"><span>באנר עליון · 600×200</span><span>תצוגה חיה</span></div>
+    <div class="sheet"><canvas id="bannerCanvas" width="1200" height="400"></canvas></div>
+    <div class="label"><span>הדיוור לפי סדר הבלוקים · 600px</span></div>
+    <div class="sheet" id="stack"></div>
+  </aside>
+</main>
+
+<div id="offline" class="offline" role="alert" hidden>אין כרגע חיבור לשרת. אפשר להמשיך לערוך; השמירה תעבוד כשהחיבור יחזור (בדרך כלל תוך דקה).</div>
+<script>
+const DEFAULT = {"banner":{"issue":"01","date":"2026-10-06","dateFormat":"month","customDate":"","title":"הניוזלטר של AutoSuccess","slogan":"אוטומציה שמבינה אותך, עסק שמרוויח.","font":"Arimo","brand":"#4a9fd1","ink":"#12384f","pill":"#f4c7a6","soft":"#ddf3fa","decor":true},
+ "blocks":[{"name":"Header","src":"blocks/01-header.png","live":"header"},{"name":"Hero","src":"blocks/02-hero.png"},{"name":"טקסט","src":"blocks/03-text.png"},{"name":"תמונה","src":"blocks/04-image.png"},{"name":"3 שלבים","src":"blocks/05-steps.png"},{"name":"תובנה","src":"blocks/06-insight.png"},{"name":"CTA","src":"blocks/07-cta.png"},{"name":"טקסט סיום","src":"blocks/08-closing-text.png"},{"name":"חתימה","src":"blocks/09-signature.png"},{"name":"Footer","src":"blocks/10-footer.png"}]};
+const BRAND = {brand:"#4a9fd1",ink:"#12384f",pill:"#f4c7a6",soft:"#ddf3fa"};
+const FIELDS = ["issue","date","dateFormat","customDate","title","slogan","font","brand","ink","pill","soft","decor"];
+const $ = id => document.getElementById(id);
+
+let state = structuredClone(DEFAULT);
+let dirty = false;
+const pending = {};        // path -> Blob (uploads not yet saved)
+const localUrls = {};      // path -> blob: URL for this session
+const imgCache = {};       // src -> Promise<HTMLImageElement>
+
+
+/* ---------- helpers ---------- */
+const srcUrl = p => localUrls[p] || p;
+function loadImg(p){
+  const u = srcUrl(p);
+  if(!imgCache[u]) imgCache[u] = new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=u;});
+  return imgCache[u];
+}
+function dateText(b){
+  if(b.dateFormat==="custom") return b.customDate || "";
+  if(!b.date) return "";
+  const d = new Date(b.date+"T12:00:00");
+  return b.dateFormat==="full"
+    ? new Intl.DateTimeFormat("he-IL",{day:"numeric",month:"long",year:"numeric"}).format(d)
+    : new Intl.DateTimeFormat("he-IL",{month:"long",year:"numeric"}).format(d);
+}
+const pillText = b => [`דיוור #${b.issue}`, dateText(b)].filter(Boolean).join(" · ");
+function setStatus(msg, kind=""){const s=$("status");s.textContent=msg;s.className="status "+kind;}
+function markDirty(){dirty=true;setStatus("יש שינויים שלא נשמרו");try{localStorage.setItem("draft",JSON.stringify(state));}catch(e){}}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
+function fitFont(ctx, text, weight, size, family, maxW){
+  let s=size; do{ctx.font=`${weight} ${s}px "${family}", Arial, sans-serif`;}while(ctx.measureText(text).width>maxW && --s>14);
+  return s;
+}
+
+/* ---------- drawing (coordinates are 2x of the 600px Canva layout) ---------- */
+async function drawBanner(canvas){
+  const b = state.banner, ctx = canvas.getContext("2d");
+  await document.fonts.load(`700 48px "${b.font}"`); await document.fonts.load(`400 32px "${b.font}"`);
+  const logo = await loadImg("logo.png");
+  ctx.save(); ctx.clearRect(0,0,1200,400);
+  ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,1200,400);
+  if(b.decor){
+    ctx.fillStyle=b.soft; ctx.beginPath(); ctx.arc(90,290,250,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=b.pill; ctx.beginPath(); ctx.arc(234,78,26,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=b.brand; ctx.lineWidth=6; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(280,188); ctx.lineTo(112,188); ctx.quadraticCurveTo(86,188,86,214); ctx.lineTo(86,236); ctx.stroke();
+    ctx.fillStyle=b.brand; ctx.beginPath(); ctx.arc(88,240,14,0,Math.PI*2); ctx.fill();
+  }
+  ctx.drawImage(logo,884,66,288,252);
+  ctx.direction="rtl"; ctx.textAlign="right"; ctx.textBaseline="top";
+  const R=868, maxW=560;
+  ctx.fillStyle=b.ink; fitFont(ctx,b.title,700,48,b.font,maxW); ctx.fillText(b.title,R,90);
+  ctx.fillStyle=b.brand; fitFont(ctx,b.slogan,400,32,b.font,maxW); ctx.fillText(b.slogan,R,174);
+  const t=pillText(b); fitFont(ctx,t,700,26,b.font,maxW-56);
+  const w=ctx.measureText(t).width+56;
+  ctx.fillStyle=b.pill; roundRect(ctx,R-w,248,w,60,30); ctx.fill();
+  ctx.fillStyle=b.ink; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(t,R-w/2,279);
+  ctx.fillStyle=b.brand; ctx.fillRect(0,388,1200,12);
+  ctx.restore();
+}
+async function drawHeader(canvas, src){
+  const b=state.banner, img=await loadImg(src), ctx=canvas.getContext("2d");
+  canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+  await document.fonts.load(`400 28px "${b.font}"`);
+  ctx.drawImage(img,0,0);
+  ctx.fillStyle="#ffffff"; ctx.fillRect(88,96,420,100);   // cover the old "issue / date" text inside the white card
+  ctx.direction="rtl"; ctx.textAlign="right"; ctx.textBaseline="top"; ctx.fillStyle=b.ink;
+  ctx.font=`400 28px "${b.font}", Arial, sans-serif`;
+  ctx.fillText(`דיוור #${b.issue}`,496,110);
+  ctx.fillText(dateText(b),496,152);
+}
+
+/* ---------- render ---------- */
+function fillForm(){
+  const b=state.banner;
+  for(const f of FIELDS){const el=$(f); if(!el) continue; el.type==="checkbox"?el.checked=!!b[f]:el.value=b[f]??"";}
+  $("customWrap").hidden = b.dateFormat!=="custom";
+}
+let renderToken=0;
+async function render(){
+  const my=++renderToken, b=state.banner;
+  $("pillText").textContent=pillText(b);
+  $("customWrap").hidden = b.dateFormat!=="custom";
+  await drawBanner($("bannerCanvas"));
+  renderList();
+  const nodes = await Promise.all(state.blocks.map(async blk=>{
+    if(blk.live==="header"){const c=document.createElement("canvas"); await drawHeader(c,blk.src); return c;}
+    const i=new Image(); i.alt=blk.name; i.src=srcUrl(blk.src); return i;
+  }).map(p=>p.catch(()=>{const d=document.createElement("div");d.textContent="תמונה חסרה";d.style.padding="20px";return d;})));
+  if(my===renderToken) $("stack").replaceChildren(...nodes);
+}
+function renderList(){
+  const ol=$("blockList"); ol.replaceChildren();
+  state.blocks.forEach((blk,i)=>{
+    const li=document.createElement("li");
+    const img=new Image(); img.src=srcUrl(blk.src); img.alt="";
+    const meta=document.createElement("div"); meta.className="meta";
+    const name=document.createElement("input"); name.type="text"; name.value=blk.name; name.id="bname-"+i; name.setAttribute("aria-label","שם הבלוק");
+    name.addEventListener("change",()=>{blk.name=name.value.trim()||"בלוק";markDirty();});
+    const btns=document.createElement("div"); btns.className="btns";
+    const mk=(txt,fn,cls="")=>{const bt=document.createElement("button");bt.type="button";bt.className="small "+cls;bt.textContent=txt;bt.addEventListener("click",fn);btns.append(bt);return bt;};
+    mk("↑",()=>move(i,-1)).disabled=i===0;
+    mk("↓",()=>move(i,1)).disabled=i===state.blocks.length-1;
+    mk("החלף",()=>pickFile(f=>replaceBlock(i,f)));
+    mk("הורד",()=>downloadBlock(i));
+    const del=mk("מחק",()=>{ if(del.dataset.armed){state.blocks.splice(i,1);markDirty();render();} else {del.dataset.armed="1";del.textContent="בטוח? לחץ שוב";setTimeout(()=>{if(del.isConnected){delete del.dataset.armed;del.textContent="מחק";}},3000);} },"danger");
+    meta.append(name);
+    if(blk.live==="header"){const t=document.createElement("span");t.className="tag";t.textContent="מתעדכן אוטומטית";name.after(t);}
+    meta.append(btns);
+    li.append(img,meta); ol.append(li);
+  });
+}
+function move(i,d){const a=state.blocks;[a[i],a[i+d]]=[a[i+d],a[i]];markDirty();render();}
+
+/* ---------- uploads ---------- */
+let pickCb=null;
+function pickFile(cb){pickCb=cb;$("filePick").value="";$("filePick").click();}
+$("filePick").addEventListener("change",e=>{const f=e.target.files[0]; if(f&&pickCb) pickCb(f);});
+function stashUpload(file){
+  const ext=(file.name.split(".").pop()||"png").toLowerCase().replace(/[^a-z]/g,"")||"png";
+  const path=`pending/${Date.now()}-${Math.random().toString(36).slice(2,7)}.${ext}`;
+  pending[path]=file; localUrls[path]=URL.createObjectURL(file);
+  return path;
+}
+function replaceBlock(i,file){
+  const blk=state.blocks[i]; blk.src=stashUpload(file); delete blk.live;  // a replaced header is a plain image
+  markDirty(); render();
+}
+$("addBlock").addEventListener("click",()=>pickFile(f=>{state.blocks.push({name:f.name.replace(/\.[^.]+$/,""),src:stashUpload(f)});markDirty();render();}));
+
+/* ---------- export ---------- */
+async function canvasFor(i){
+  const blk=state.blocks[i], c=document.createElement("canvas");
+  if(blk.live==="header"){await drawHeader(c,blk.src);return c;}
+  const img=await loadImg(blk.src); c.width=img.naturalWidth; c.height=img.naturalHeight; c.getContext("2d").drawImage(img,0,0); return c;
+}
+async function fullCanvas(){
+  const parts=[$("bannerCanvas")]; for(let i=0;i<state.blocks.length;i++) parts.push(await canvasFor(i));
+  const W=1200, hs=parts.map(p=>Math.round(p.height*W/p.width)), c=document.createElement("canvas");
+  c.width=W; c.height=hs.reduce((a,b)=>a+b,0); const ctx=c.getContext("2d"); let y=0;
+  parts.forEach((p,k)=>{ctx.drawImage(p,0,y,W,hs[k]); y+=hs[k];}); return c;
+}
+const slug = s => s.replace(/[^\w֐-׿-]+/g,"-").replace(/^-|-$/g,"") || "block";
+async function save(canvas, filename){
+  let blob;
+  try{ blob = await new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/png")); }
+  catch(e){ setStatus("הייצוא נכשל. נסו לרענן את הדף.","err"); return; }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+const issueTag = () => `${state.banner.issue}`.replace(/\W/g,"") || "x";
+$("dlBanner").addEventListener("click",()=>save($("bannerCanvas"),`banner-diyur-${issueTag()}.png`));
+$("dlHeader").addEventListener("click",async()=>{const i=state.blocks.findIndex(b=>b.live==="header"); if(i<0){setStatus("אין בלוק Header חי ברשימה","err");return;} save(await canvasFor(i),`header-diyur-${issueTag()}.png`);});
+$("dlAll").addEventListener("click",async()=>save(await fullCanvas(),`diyur-${issueTag()}-full.png`));
+async function downloadBlock(i){ save(await canvasFor(i), `${String(i+1).padStart(2,"0")}-${slug(state.blocks[i].name)}.png`); }
+
+/* ---------- persistence (server: /api/upload + /api/state, read back from data/) ---------- */
+async function call(url, opts){
+  for(let n=0;;n++){
+    try{
+      const r=await fetch(url,opts);
+      if(!r.ok){const t=await r.json().catch(()=>({})); throw Object.assign(new Error(t.error||("HTTP "+r.status)),{http:true});}
+      return r.json();
+    }catch(e){ if(e.http||n>=2) throw e; await new Promise(r=>setTimeout(r,1500*(n+1))); }
+  }
+}
+$("saveBtn").addEventListener("click",async()=>{
+  const btn=$("saveBtn"); btn.disabled=true; setStatus("שומר…");
+  try{
+    for(const p of Object.keys(pending)){
+      const f=pending[p];
+      const {path}=await call("api/upload",{method:"POST",headers:{"content-type":f.type||"image/png"},body:f});
+      localUrls[path]=localUrls[p];
+      state.blocks.forEach(b=>{if(b.src===p) b.src=path;});
+      delete pending[p];
+    }
+    await call("api/state",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify(state)});
+    dirty=false; try{localStorage.removeItem("draft");}catch(e){}
+    setStatus("נשמר בשרת","ok"); renderList();
+  }catch(e){
+    setStatus(e.http? "השרת לא קיבל את השמירה: "+e.message : "אין כרגע חיבור לשרת. נסו לשמור שוב בעוד דקה.","err");
+  }finally{btn.disabled=false;}
+});
+addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();}});
+
+/* ---------- connection banner ---------- */
+async function health(){
+  let ok=false; try{ok=(await fetch("health",{cache:"no-store"})).ok;}catch(e){}
+  $("offline").hidden=ok; setTimeout(health, ok?120000:20000);
+}
+
+/* ---------- wiring ---------- */
+for(const f of FIELDS){
+  const el=$(f); if(!el) continue;
+  el.addEventListener("input",()=>{state.banner[f]= el.type==="checkbox"?el.checked:el.value; markDirty(); render();});
+}
+$("resetColors").addEventListener("click",()=>{Object.assign(state.banner,BRAND);fillForm();markDirty();render();});
+
+(async function boot(){
+  try{ const r=await fetch("data/state.json",{cache:"no-store"}); if(r.ok) state=await r.json(); }catch(e){}
+  state.banner={...DEFAULT.banner,...state.banner};
+  try{ const d=localStorage.getItem("draft"); if(d){ const draft=JSON.parse(d);
+    // a draft can point at uploads that were never saved; keep the saved block list in that case
+    if(draft.blocks.some(b=>b.src.startsWith("pending/"))) draft.blocks=state.blocks;
+    state=draft; state.banner={...DEFAULT.banner,...state.banner};
+    dirty=true; setStatus("נטענה טיוטה שלא נשמרה"); } }catch(e){}
+  fillForm(); render(); health();
+  $("dlHint").textContent="הקבצים יורדים לתיקיית ההורדות של המחשב.";
+})();
+</script>
