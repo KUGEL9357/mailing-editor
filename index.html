@@ -246,14 +246,16 @@ function wrapLines(ctx,text,maxW){
   }
   return out;
 }
-// draws wrapped RTL text; returns the height it used (600px units)
+// draws wrapped RTL text; returns the height it used (600px units).
+// Line metrics follow Canva: a line box is 1.18 x size, following lines step by lineHeight x 0.9 x size.
 function text(ctx,{t,x,y,w,size,weight=400,color,align="right",lh=1.4}){
   if(!String(t??"").trim()) return 0;
   ctx.font=fontCss(weight,size); ctx.fillStyle=color; ctx.direction="rtl"; ctx.textBaseline="middle";
   ctx.textAlign=align==="center"?"center":"right";
-  const X=(align==="center"? x+w/2 : x+w)*S, L=size*lh, lines=wrapLines(ctx,t,w*S);
-  lines.forEach((l,i)=>ctx.fillText(l,X,(y+i*L+L/2)*S));
-  return lines.length*L;
+  const X=(align==="center"? x+w/2 : x+w)*S, h0=size*1.18, step=Math.max(size*lh*0.9,size*1.15);
+  const lines=wrapLines(ctx,t,w*S*1.03);   // Canva wraps a touch later than a strict width check
+  lines.forEach((l,i)=>ctx.fillText(l,X,(y+h0/2+i*step)*S));
+  return h0+(lines.length-1)*step;
 }
 function cover(ctx,img,x,y,w,h){
   const r=Math.max(w/img.naturalWidth,h/img.naturalHeight), sw=w/r, sh=h/r;
@@ -285,7 +287,7 @@ const R = {
     rect(ctx,24,16,552,H,24,b.soft);
     if(photo) cover(ctx,photo,48,44,196,244);
     if(tagH){ ctx.font=fontCss(700,14); const tw=Math.max(110,ctx.measureText(f.tag).width/S+40);
-      rect(ctx,548-tw,44,tw,34,17,b.pill); text(ctx,{t:f.tag,x:548-tw,y:44+(34-19.6)/2,w:tw,size:14,weight:700,color:b.ink,align:"center"}); }
+      rect(ctx,548-tw,44,tw,34,17,b.pill); text(ctx,{t:f.tag,x:548-tw,y:61-14*1.18/2,w:tw,size:14,weight:700,color:b.ink,align:"center"}); }
     text(ctx,{t:f.title,x:252,y:ty,w:300,size:31,weight:700,color:b.ink,lh:1.15});
     text(ctx,{t:f.text,x:258,y:subTop,w:290,size:17,color:b.ink});
     if(b.decor){ const cy=16+H-36; curve(ctx,420,cy,"M128,2 H18 A16,16 0 0 0 2,18",b.brand); dot(ctx,422,cy+18,7,b.brand); }
@@ -313,11 +315,11 @@ const R = {
     const off=document.createElement("canvas").getContext("2d");
     for(const [s,d] of steps){ tops.push(y);
       const hs=text(off,{t:s,x:24,y:0,w:496,size:20,weight:700}), hd=text(off,{t:d,x:24,y:0,w:496,size:16});
-      y+=Math.max(48, hs+hd)+18; }
+      y+=Math.max(48, (hs?28:0)+hd)+20; }
     if(tops.length>1) rect(ctx,555,tops[0]+20,2,tops.at(-1)-tops[0],0,b.soft);
     steps.forEach(([s,d],i)=>{ const t=tops[i];
       dot(ctx,556,t+20,20,b.brand);
-      text(ctx,{t:String(i+1),x:536,y:t+7.4,w:40,size:18,weight:700,color:"#ffffff",align:"center"});
+      text(ctx,{t:String(i+1),x:536,y:t+20-18*1.18/2,w:40,size:18,weight:700,color:"#ffffff",align:"center"});
       const hs=text(ctx,{t:s,x:24,y:t-2,w:496,size:20,weight:700,color:b.ink});
       text(ctx,{t:d,x:24,y:t-2+(hs?28:0),w:496,size:16,color:b.ink});
     });
@@ -326,10 +328,10 @@ const R = {
   async insight(ctx,f){
     const b=state.banner, off=document.createElement("canvas").getContext("2d");
     let y=39; const parts=[];
-    const hl=text(off,{t:f.label,x:48,y:0,w:504,size:13,weight:700}); if(hl){parts.push(["label",y]); y+=hl+3.8;}
-    const ht=text(off,{t:f.title,x:48,y:0,w:504,size:25,weight:700}); if(ht){parts.push(["title",y]); y+=ht+7;}
+    const hl=text(off,{t:f.label,x:48,y:0,w:504,size:13,weight:700}); if(hl){parts.push(["label",y]); y+=hl+6.7;}
+    const ht=text(off,{t:f.title,x:48,y:0,w:504,size:25,weight:700}); if(ht){parts.push(["title",y]); y+=ht+12.5;}
     const hx=text(off,{t:f.text,x:48,y:0,w:504,size:17,lh:1.45}); if(hx){parts.push(["text",y]); y+=hx;}
-    const H=Math.max(200, y-17+64);
+    const H=Math.max(200, y-17+71.7);
     rect(ctx,24,17,552,H,20,b.soft);
     for(const [k,py] of parts){
       if(k==="label") text(ctx,{t:f.label,x:48,y:py,w:504,size:13,weight:700,color:b.brand});
@@ -342,10 +344,10 @@ const R = {
   async cta(ctx,f){
     const b=state.banner;
     const h=text(ctx,{t:f.title,x:24,y:17,w:552,size:22,weight:700,color:b.ink,align:"center"});
-    const top=h? 17+h+9.4 : 17;
+    const top=h? 17+h+14 : 17;
     ctx.font=fontCss(700,18); const bw=Math.min(552,Math.max(340,ctx.measureText(f.button||"").width/S+64));
     const bx=300-bw/2, bh=text(document.createElement("canvas").getContext("2d"),{t:f.button,x:bx+24,y:0,w:bw-48,size:18,weight:700});
-    const H=Math.max(56,bh+30.8);
+    const H=Math.max(56,bh+34.8);
     rect(ctx,bx,top,bw,H,28,b.brand);
     text(ctx,{t:f.button,x:bx+24,y:top+(H-bh)/2,w:bw-48,size:18,weight:700,color:"#ffffff",align:"center"});
     return top+H+19;
@@ -364,10 +366,10 @@ const R = {
     logoBox(ctx,logo,252,36,96,92);
     let y=138;
     y+=text(ctx,{t:f.tagline,x:24,y,w:552,size:16,weight:700,color:b.ink,align:"center"})||0;
-    y=Math.max(y+7.6,168);
+    y=Math.max(y+11.1,168);
     y+=text(ctx,{t:f.links,x:24,y,w:552,size:12,color:MUTED,align:"center"});
-    rect(ctx,24,y+17.2,552,2,0,b.soft);
-    return Math.max(270,y+85.2);
+    rect(ctx,24,y+19.8,552,2,0,b.soft);
+    return Math.max(270,y+87.8);
   },
   async upload(ctx,f,blk){
     const img=await loadImg(blk.src);
