@@ -71,6 +71,9 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
 .proof .sheet canvas.blk:hover{outline:2px dashed var(--brand);outline-offset:-2px}
 .proof .label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
 .hint{font-size:12px;color:var(--muted);margin:0}
+.tabs{max-width:1180px;margin:0 auto 18px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-radius:10px 10px 0 0;background:none;color:var(--muted);padding:10px 18px;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--brand);background:var(--panel)}
 .offline{position:fixed;inset-inline:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--danger);color:#fff;text-align:center;font-weight:600}
 @media (prefers-reduced-motion:no-preference){button{transition:border-color .15s}}
 </style>
@@ -85,10 +88,15 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
   </div>
 </header>
 
+<nav class="tabs" role="tablist" aria-label="בחירת עיצוב">
+  <button type="button" role="tab" id="tab-master" data-view="master" aria-selected="true">AutoSuccess Master</button>
+  <button type="button" role="tab" id="tab-grid" data-view="grid" aria-selected="false">גריד דיוור תוכן</button>
+</nav>
+
 <main class="wrap">
   <section class="controls">
     <div class="panel">
-      <h2>באנר עליון</h2>
+      <h2>פרטי הגיליון (משותף לשני העיצובים)</h2>
       <div class="row">
         <label for="issue">מספר דיוור<input id="issue" type="text" inputmode="numeric" autocomplete="off"></label>
         <label for="date">תאריך הדיוור<input id="date" type="date"></label>
@@ -103,9 +111,11 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
         </label>
         <label for="customDate" id="customWrap" hidden>טקסט תאריך<input id="customDate" type="text" autocomplete="off"></label>
       </div>
-      <p class="pill-preview">יופיע בתגית וב-Header: <b id="pillText"></b></p>
-      <label for="title">כותרת<input id="title" type="text" autocomplete="off"></label>
-      <label for="slogan">סלוגן<input id="slogan" type="text" autocomplete="off"></label>
+      <p class="pill-preview" id="pillWrap">יופיע בתגית וב-Header: <b id="pillText"></b></p>
+      <div id="bannerFields" style="display:grid;gap:14px">
+        <label for="title">כותרת הבאנר העליון<input id="title" type="text" autocomplete="off"></label>
+        <label for="slogan">סלוגן הבאנר העליון<input id="slogan" type="text" autocomplete="off"></label>
+      </div>
     </div>
 
     <div class="panel">
@@ -156,8 +166,10 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
   </section>
 
   <aside class="proof" aria-label="תצוגה מקדימה">
-    <div class="label"><span>באנר עליון · 600×200</span><span>תצוגה חיה</span></div>
-    <div class="sheet"><canvas id="bannerCanvas" width="1200" height="400"></canvas></div>
+    <div id="bannerPreview" style="display:grid;gap:10px">
+      <div class="label"><span>באנר עליון · 600×200</span><span>תצוגה חיה</span></div>
+      <div class="sheet"><canvas id="bannerCanvas" width="1200" height="400"></canvas></div>
+    </div>
     <div class="label"><span>הדיוור לפי סדר הבלוקים · 600px</span><span>לחיצה על בלוק פותחת אותו לעריכה</span></div>
     <div class="sheet scroll" id="stack"></div>
   </aside>
@@ -191,11 +203,44 @@ const TYPES = {
   upload:   {label:"תמונה מוכנה", fields:[]}
 };
 const ORDER = ["header","hero","text","image","steps","insight","cta","closing","signature","footer"];
-const newBlock = type => ({type, name:TYPES[type].label, f:{...(TYPES[type].defaults||{})}, ...(TYPES[type].photoSrc?{photo:TYPES[type].photoSrc}:{})});
+ORDER.forEach(t=>TYPES[t].design="master");
+
+/* "גריד דיוור תוכן" (Canva DAHXOswyQ-I) — Canva works at 1200px there, so every number below is half of Canva's */
+Object.assign(TYPES,{
+  gheader: {design:"grid", label:"כותרת הדיוור", fields:[["title","שם הדיוור"],["subtitle","שורת משנה ({גיליון} = מספר הגיליון)"]],
+            defaults:{title:"דקה של סדר", subtitle:"גיליון {גיליון} | אוטומציה שמרוויחה לך כסף"}},
+  gpara:   {design:"grid", label:"פסקה", fields:[["text","טקסט",1]], defaults:{text:"שלום לך,\nכותבים כאן את הפסקה."}},
+  gtip:    {design:"grid", label:"כרטיס טיפ", fields:[["num","מספר"],["tag","תגית"],["title","כותרת",1]], defaults:{num:"01", tag:"טיפ", title:"כותרת הטיפ כאן"}},
+  gtool:   {design:"grid", label:"כרטיס כלי", photo:true, photoLabel:"לוגו הכלי", fields:[["tag","תגית"],["title","שם הכלי",1],["logoText","טקסט במקום לוגו (כשאין תמונה)"]],
+            defaults:{tag:"כלי מומלץ", title:"שם הכלי כאן", logoText:"לוגו הכלי"}},
+  gstory:  {design:"grid", label:"כרטיס מהשטח", fields:[["tag","תגית"],["title","כותרת",1]], defaults:{tag:"מהשטח", title:"כותרת הסיפור כאן"}},
+  gdivider:{design:"grid", label:"מפריד", fields:[]},
+  gcta:    {design:"grid", label:"כפתור פעולה", fields:[["button","טקסט הכפתור"]], defaults:{button:"טקסט הכפתור כאן ←"}},
+  gfooter: {design:"grid", label:"תחתית", fields:[["name","שם"],["tagline","סלוגן"],["url","כתובת אתר"]],
+            defaults:{name:"AutoSuccess", tagline:"אוטומציה שמרוויחה לך כסף", url:"autosuccess.cc"}}
+});
+TYPES.upload.design="both";
+
+const newBlock = (type,f) => ({type, name:TYPES[type].label, f:{...(TYPES[type].defaults||{}),...(f||{})}, ...(TYPES[type].photoSrc?{photo:TYPES[type].photoSrc}:{})});
+// starting content = the sample newsletter on page 9 of the Canva design
+const GRID_START = () => [
+  newBlock("gheader"),
+  newBlock("gpara",{text:"שלום לך,\nהשבוע אני רוצה לדבר על הזמן שהולך לאיבוד בין הודעה להודעה. רוב בעלות העסקים שאני פוגשת מוציאות קרוב לשעה ביום על תיאום פגישות, תזכורות והודעות שחוזרות על עצמן. בדיוור הזה: טיפ אחד, כלי אחד וסיפור קצר מהשטח."}),
+  newBlock("gtip",{title:"תבנית אחת לכל הודעה חוזרת"}),
+  newBlock("gpara",{text:"כתבי פעם אחת את ההודעות שאת שולחת שוב ושוב – אישור פגישה, בקשת מסמכים, תזכורת לתשלום – ושמרי אותן כתבניות. ככה כל הודעה לוקחת שתי שניות במקום חמש דקות."}),
+  newBlock("gdivider"),
+  newBlock("gtool",{title:"Calendly"}),
+  newBlock("gpara",{text:"במקום פינג-פונג של \"מתי נוח לך?\", הלקוחה בוחרת שעה פנויה ביומן שלך, והפגישה נכנסת ליומן אוטומטית יחד עם תזכורת. לרוב העסקים הקטנים הגרסה החינמית מספיקה."}),
+  newBlock("gdivider"),
+  newBlock("gstory",{title:"מ־40 הודעות ביום ל־5"}),
+  newBlock("gpara",{text:"לקוחה שלי, בעלת קליניקה, הייתה מסיימת כל ערב באישורי תורים ידניים. חיברנו טופס הרשמה לתזכורות אוטומטיות, ותוך שבועיים היא החזירה לעצמה כמעט שעה ביום."}),
+  newBlock("gcta",{button:"לשיחת היכרות קצרה ←"}),
+  newBlock("gfooter")
+];
 
 const DEFAULT = {
   banner:{issue:"01",date:"2026-10-06",dateFormat:"month",customDate:"",title:"הניוזלטר של AutoSuccess",slogan:"אוטומציה שמבינה אותך, עסק שמרוויח.",font:"Arimo",brand:"#4a9fd1",ink:"#12384f",pill:"#f4c7a6",soft:"#ddf3fa",decor:true},
-  blocks: ORDER.map(newBlock)
+  designs: { master:{blocks:ORDER.map(t=>newBlock(t))}, grid:{blocks:GRID_START()} }
 };
 const BRAND = {brand:"#4a9fd1",ink:"#12384f",pill:"#f4c7a6",soft:"#ddf3fa"};
 const FIELDS = ["issue","date","dateFormat","customDate","title","slogan","font","brand","ink","pill","soft","decor"];
@@ -203,6 +248,9 @@ const PAGE_BG="#f8fafb", MUTED="#6b8597", S=2;
 const $ = id => document.getElementById(id);
 
 let state = structuredClone(DEFAULT);
+let view = "master";                       // which design tab is open (a per-browser preference, not saved state)
+try{ if(localStorage.getItem("view")==="grid") view="grid"; }catch(e){}
+const cur = () => state.designs[view].blocks;
 let dirty = false;
 const pending = {};        // path -> Blob (uploads not yet saved)
 const localUrls = {};      // path -> blob: URL for this session
@@ -266,6 +314,27 @@ function curve(ctx,ox,oy,d,color){ // Canva's "signature" stroke, path in its ow
 }
 // logo.png region = the Canva logo frame; "multiply" drops the logo's white ground onto any background
 function logoBox(ctx,logo,x,y,w,h){ ctx.save(); ctx.globalCompositeOperation="multiply"; ctx.drawImage(logo,16,2,256,248,x*S,y*S,w*S,h*S); ctx.restore(); }
+
+function blend(ctx,img,x,y,w,h){ ctx.save(); ctx.globalCompositeOperation="multiply"; ctx.drawImage(img,x*S,y*S,w*S,h*S); ctx.restore(); }
+function wave(ctx,ox,oy,scale,d,width,color,alpha){
+  ctx.save(); ctx.globalAlpha=alpha; ctx.translate(ox*S,oy*S); ctx.scale(S*scale,S*scale);
+  ctx.strokeStyle=color; ctx.lineWidth=width; ctx.stroke(new Path2D(d)); ctx.restore();
+}
+// grid cards: 560-wide card, tag pill top-right of the text column, title under it; the card grows with the title
+function gcard(ctx,f,fill,stroke){
+  const th=text(document.createElement("canvas").getContext("2d"),{t:f.title,x:65,y:0,w:400,size:26,weight:700});
+  const H=Math.max(110, 60+Math.max(th,30.8)+19.2);
+  rect(ctx,20,10,560,H,14,fill);
+  if(stroke){ ctx.save(); ctx.strokeStyle=stroke; ctx.lineWidth=2*S; ctx.beginPath(); ctx.roundRect(21*S,11*S,558*S,(H-2)*S,13*S); ctx.stroke(); ctx.restore(); }
+  text(ctx,{t:f.title,x:65,y:60,w:400,size:26,weight:700,color:state.banner.ink});
+  return H;
+}
+function pill(ctx,label,fill,color){
+  if(!String(label??"").trim()) return;
+  ctx.font=fontCss(700,13); const w=Math.max(60,ctx.measureText(label).width/S+28);
+  rect(ctx,465-w,31,w,23,11.5,fill);
+  text(ctx,{t:label,x:465-w,y:31+(23-13*1.16)/2,w,size:13,weight:700,color,align:"center"});
+}
 
 /* ---------- block renderers: draw at y=0 and return the block height ---------- */
 const R = {
@@ -372,6 +441,79 @@ const R = {
     rect(ctx,24,y+19.8,552,2,0,b.soft);
     return Math.max(270,y+87.8);
   },
+  /* ----- "גריד דיוור תוכן" ----- */
+  async gheader(ctx,f){
+    const b=state.banner, icon=await loadImg("assets/grid-icon.png");
+    const off=document.createElement("canvas").getContext("2d");
+    const th=text(off,{t:f.title,x:65,y:0,w:380,size:30,weight:700});
+    const subTop=50+Math.max(th,34.8)+12.7, sub=(f.subtitle||"").replaceAll("{גיליון}",b.issue);
+    const sh=text(off,{t:sub,x:65,y:0,w:380,size:14});
+    const H=Math.max(150, subTop+sh-15+50.8);
+    rect(ctx,20,15,560,H,18,b.soft);
+    if(b.decor) wave(ctx,40,15+H-57.5,0.5,"M0,70 C60,70 90,10 160,10 C230,10 260,70 320,70",6,b.brand,0.45);
+    rect(ctx,467.5,15+H/2-47.5,95,95,16,"#ffffff");
+    blend(ctx,icon,475,15+H/2-40,80,79);
+    text(ctx,{t:f.title,x:65,y:50,w:380,size:30,weight:700,color:b.ink});
+    text(ctx,{t:sub,x:65,y:subTop,w:380,size:14,color:b.ink});
+    return 15+H+15;
+  },
+  async gpara(ctx,f){
+    const h=text(ctx,{t:f.text,x:40,y:20,w:520,size:16,color:state.banner.ink,lh:1.6});
+    return 20+h+20;
+  },
+  async gtip(ctx,f){
+    const b=state.banner;
+    const H=gcard(ctx,f,b.soft,null);
+    pill(ctx,f.tag,b.ink,"#ffffff");
+    text(ctx,{t:f.num,x:475,y:10+H/2-36,w:85,size:60,weight:700,color:b.brand,align:"center",lh:1.2});
+    return 10+H+10;
+  },
+  async gtool(ctx,f,blk){
+    const b=state.banner, logo=blk.photo? await loadImg(blk.photo).catch(()=>null) : null;
+    const H=gcard(ctx,f,b.soft,null);
+    pill(ctx,f.tag,"#ffffff",b.ink);
+    const top=10+H/2-37.5;
+    rect(ctx,480,top,75,75,14,"#ffffff");
+    if(logo){ const r=Math.min(61/logo.naturalWidth,61/logo.naturalHeight), w=logo.naturalWidth*r, h=logo.naturalHeight*r;
+      ctx.drawImage(logo,(517.5-w/2)*S,(top+37.5-h/2)*S,w*S,h*S); }
+    else text(ctx,{t:f.logoText,x:480,y:top+29,w:75,size:11,color:"#9ca3af",align:"center"});
+    return 10+H+10;
+  },
+  async gstory(ctx,f){
+    const b=state.banner;
+    const H=gcard(ctx,f,"#ffffff",b.brand);
+    pill(ctx,f.tag,b.pill,b.ink);
+    text(ctx,{t:"”",x:480,y:10+H/2-45,w:75,size:110,weight:700,color:b.brand,align:"center",lh:1});
+    return 10+H+10;
+  },
+  async gdivider(ctx){
+    const b=state.banner;
+    ctx.save(); ctx.globalAlpha=0.35; rect(ctx,70,24,180,2,1,b.brand); rect(ctx,350,24,180,2,1,b.brand); ctx.restore();
+    if(b.decor) wave(ctx,260,10,0.5,"M0,30 C30,30 45,6 80,6 C115,6 130,30 160,30",5,b.brand,1);
+    return 50;
+  },
+  async gcta(ctx,f){
+    const b=state.banner;
+    ctx.font=fontCss(700,21); const bw=Math.min(560,Math.max(280,ctx.measureText(f.button||"").width/S+60));
+    const bh=text(document.createElement("canvas").getContext("2d"),{t:f.button,x:0,y:0,w:bw-40,size:21,weight:700});
+    const H=Math.max(55,bh+30.6);
+    rect(ctx,300-bw/2,22.5,bw,H,27.5,b.brand);
+    text(ctx,{t:f.button,x:300-bw/2+20,y:22.5+(H-bh)/2,w:bw-40,size:21,weight:700,color:"#ffffff",align:"center"});
+    return 22.5+H+22.5;
+  },
+  async gfooter(ctx,f){
+    const b=state.banner, icon=await loadImg("assets/grid-icon.png");
+    rect(ctx,0,0,600,1000,0,b.soft);
+    rect(ctx,0,0,600,4,0,b.pill);
+    rect(ctx,271.5,11,57,57,12,"#ffffff");
+    blend(ctx,icon,277.5,17.5,45,44);
+    let y=74;
+    y+=text(ctx,{t:f.name,x:150,y,w:300,size:17,weight:700,color:b.ink,align:"center"})+5;
+    y+=text(ctx,{t:f.tagline,x:150,y:Math.max(y,99),w:300,size:13,color:b.ink,align:"center"})+8.1;
+    y=Math.max(y,122.5);
+    ctx.save(); ctx.globalAlpha=0.75; const h=text(ctx,{t:f.url,x:150,y,w:300,size:12,color:b.ink,align:"center"}); ctx.restore();
+    return Math.max(160, y+h+23.4);
+  },
   async upload(ctx,f,blk){
     const img=await loadImg(blk.src);
     const h=img.naturalHeight*600/img.naturalWidth;
@@ -431,12 +573,22 @@ async function renderPreview(){
   $("pillText").textContent=pillText(b);
   $("customWrap").hidden = b.dateFormat!=="custom";
   await drawBanner($("bannerCanvas"));
-  const nodes = await Promise.all(state.blocks.map((blk,i)=>renderBlock(blk).then(c=>{
+  const nodes = await Promise.all(cur().map((blk,i)=>renderBlock(blk).then(c=>{
     c.className="blk"; c.title=`${blk.name} · לחצו לעריכה`; c.addEventListener("click",()=>openBlock(i)); return c;
   }).catch(()=>{const d=document.createElement("div");d.textContent=`${blk.name}: התמונה לא נטענה`;d.style.padding="20px";return d;})));
   if(my===renderToken){ const st=$("stack"), top=st.scrollTop; st.replaceChildren(...nodes); st.scrollTop=top; }
 }
 function render(){ renderList(); schedule(); }
+
+/* ---------- design tabs ---------- */
+function setView(v){
+  view=v; try{localStorage.setItem("view",v);}catch(e){}
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.view===v)));
+  const m=v==="master";
+  $("bannerFields").hidden=!m; $("bannerPreview").hidden=!m; $("dlBanner").hidden=!m; $("pillWrap").hidden=!m;
+  openSet.clear(); fillAddTypes(); render();
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
 
 /* ---------- block list + editors ---------- */
 function openBlock(i){
@@ -446,7 +598,7 @@ function openBlock(i){
 }
 function renderList(){
   const ol=$("blockList"); ol.replaceChildren();
-  state.blocks.forEach((blk,i)=>{
+  cur().forEach((blk,i)=>{
     const T=TYPES[blk.type], li=document.createElement("li"), det=document.createElement("details");
     det.open=openSet.has(i); li.classList.toggle("active",det.open);
     det.addEventListener("toggle",()=>{det.open?openSet.add(i):openSet.delete(i); li.classList.toggle("active",det.open);});
@@ -474,20 +626,20 @@ function renderList(){
     const btns=document.createElement("div"); btns.className="btns";
     const mk=(txt,fn,cls="")=>{const bt=document.createElement("button");bt.type="button";bt.className="small "+cls;bt.textContent=txt;bt.addEventListener("click",fn);btns.append(bt);return bt;};
     mk("↑ למעלה",()=>move(i,-1)).disabled=i===0;
-    mk("↓ למטה",()=>move(i,1)).disabled=i===state.blocks.length-1;
-    if(T.photo) mk("החלף תמונה",()=>pickFile(f=>{blk.photo=stashUpload(f);markDirty();schedule();}));
+    mk("↓ למטה",()=>move(i,1)).disabled=i===cur().length-1;
+    if(T.photo) mk(T.photoLabel?"העלה "+T.photoLabel:"החלף תמונה",()=>pickFile(f=>{blk.photo=stashUpload(f);markDirty();schedule();}));
     if(blk.type==="upload") mk("החלף תמונה",()=>pickFile(f=>{blk.src=stashUpload(f);markDirty();schedule();}));
     if(T.defaults) mk("החזר טקסט מקורי",()=>{blk.f={...T.defaults};markDirty();render();});
-    mk("שכפל",()=>{state.blocks.splice(i+1,0,structuredClone(blk));shiftOpen(i+1,1);markDirty();render();});
+    mk("שכפל",()=>{cur().splice(i+1,0,structuredClone(blk));shiftOpen(i+1,1);markDirty();render();});
     mk("הורד PNG",()=>downloadBlock(i));
-    const del=mk("מחק",()=>{ if(del.dataset.armed){state.blocks.splice(i,1);shiftOpen(i,-1);markDirty();render();} else {del.dataset.armed="1";del.textContent="בטוח? לחצו שוב";setTimeout(()=>{if(del.isConnected){delete del.dataset.armed;del.textContent="מחק";}},3000);} },"danger");
+    const del=mk("מחק",()=>{ if(del.dataset.armed){cur().splice(i,1);shiftOpen(i,-1);markDirty();render();} else {del.dataset.armed="1";del.textContent="בטוח? לחצו שוב";setTimeout(()=>{if(del.isConnected){delete del.dataset.armed;del.textContent="מחק";}},3000);} },"danger");
     body.append(btns);
     det.append(sum,body); li.append(det); ol.append(li);
   });
 }
 function shiftOpen(from,d){ const s=[...openSet].map(k=>k>=from?k+d:k).filter(k=>k>=0); openSet.clear(); s.forEach(k=>openSet.add(k)); if(d>0) openSet.add(from); }
 function move(i,d){
-  const a=state.blocks; [a[i],a[i+d]]=[a[i+d],a[i]];
+  const a=cur(); [a[i],a[i+d]]=[a[i+d],a[i]];
   const oi=openSet.has(i), od=openSet.has(i+d); openSet.delete(i); openSet.delete(i+d); if(oi) openSet.add(i+d); if(od) openSet.add(i);
   markDirty(); render();
 }
@@ -502,17 +654,21 @@ function stashUpload(file){
   pending[path]=file; localUrls[path]=URL.createObjectURL(file);
   return path;
 }
-for(const t of Object.keys(TYPES)){const o=document.createElement("option");o.value=t;o.textContent=t==="upload"?"תמונה מוכנה (העלאת קובץ)":TYPES[t].label;$("addType").append(o);}
+function fillAddTypes(){
+  $("addType").replaceChildren();
+  for(const t of Object.keys(TYPES)){ const d=TYPES[t].design; if(d!==view && d!=="both") continue;
+    const o=document.createElement("option");o.value=t;o.textContent=t==="upload"?"תמונה מוכנה (העלאת קובץ)":TYPES[t].label;$("addType").append(o); }
+}
 $("addBlock").addEventListener("click",()=>{
   const t=$("addType").value;
-  const add=blk=>{state.blocks.push(blk);openSet.add(state.blocks.length-1);markDirty();render();setTimeout(()=>openBlock(state.blocks.length-1));};
+  const add=blk=>{cur().push(blk);openSet.add(cur().length-1);markDirty();render();setTimeout(()=>openBlock(cur().length-1));};
   if(t==="upload") pickFile(f=>add({type:"upload",name:f.name.replace(/\.[^.]+$/,""),f:{},src:stashUpload(f)}));
   else add(newBlock(t));
 });
 
 /* ---------- export ---------- */
 async function fullCanvas(){
-  const parts=[$("bannerCanvas")]; for(const blk of state.blocks) parts.push(await renderBlock(blk));
+  const parts=view==="master"?[$("bannerCanvas")]:[]; for(const blk of cur()) parts.push(await renderBlock(blk));
   const W=1200, c=document.createElement("canvas");
   c.width=W; c.height=parts.reduce((a,p)=>a+p.height,0); const ctx=c.getContext("2d"); let y=0;
   for(const p of parts){ctx.drawImage(p,0,y); y+=p.height;} return c;
@@ -527,7 +683,7 @@ async function save(canvas, filename){
 const issueTag = () => `${state.banner.issue}`.replace(/\W/g,"") || "x";
 $("dlBanner").addEventListener("click",()=>save($("bannerCanvas"),`banner-diyur-${issueTag()}.png`));
 $("dlAll").addEventListener("click",async()=>save(await fullCanvas(),`diyur-${issueTag()}-full.png`));
-async function downloadBlock(i){ save(await renderBlock(state.blocks[i]), `diyur-${issueTag()}-${String(i+1).padStart(2,"0")}-${slug(state.blocks[i].name)}.png`); }
+async function downloadBlock(i){ save(await renderBlock(cur()[i]), `diyur-${issueTag()}-${String(i+1).padStart(2,"0")}-${slug(cur()[i].name)}.png`); }
 
 /* ---------- persistence (server: /api/upload + /api/state, read back from data/) ---------- */
 async function call(url, opts){
@@ -546,7 +702,7 @@ $("saveBtn").addEventListener("click",async()=>{
       const f=pending[p];
       const {path}=await call("api/upload",{method:"POST",headers:{"content-type":f.type||"image/png"},body:f});
       localUrls[path]=localUrls[p];
-      state.blocks.forEach(b=>{if(b.src===p) b.src=path; if(b.photo===p) b.photo=path;});
+      allBlocks().forEach(b=>{if(b.src===p) b.src=path; if(b.photo===p) b.photo=path;});
       delete pending[p];
     }
     await call("api/state",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify(state)});
@@ -573,14 +729,21 @@ $("resetColors").addEventListener("click",()=>{Object.assign(state.banner,BRAND)
 
 // state saved by the first version of the editor held flat images (blocks/NN-*.png); turn those into live blocks
 const LEGACY = {"01":"header","02":"hero","03":"text","04":"image","05":"steps","06":"insight","07":"cta","08":"closing","09":"signature","10":"footer"};
-function migrate(s){
-  s.banner={...DEFAULT.banner,...(s.banner||{})};
-  s.blocks=(s.blocks||[]).map(b=>{
+const allBlocks = () => Object.values(state.designs).flatMap(d=>d.blocks);
+function fixBlocks(list){
+  return (list||[]).map(b=>{
     if(b.type && TYPES[b.type]) return {...b, f:{...(TYPES[b.type].defaults||{}),...(b.f||{})}};
     const m=/^blocks\/(\d\d)-/.exec(b.src||"");
     if(m && LEGACY[m[1]]) return newBlock(LEGACY[m[1]]);
     return {type:"upload",name:b.name||"תמונה",f:{},src:b.src};
   });
+}
+function migrate(s){
+  s.banner={...DEFAULT.banner,...(s.banner||{})};
+  // first versions kept one list in s.blocks (the Master design)
+  const d=s.designs||{master:{blocks:s.blocks}}; delete s.blocks;
+  s.designs={ master:{blocks: d.master?.blocks ? fixBlocks(d.master.blocks) : structuredClone(DEFAULT.designs.master.blocks)},
+              grid:  {blocks: d.grid?.blocks   ? fixBlocks(d.grid.blocks)   : GRID_START()} };
   return s;
 }
 
@@ -589,9 +752,10 @@ function migrate(s){
   state=migrate(state);
   try{ const d=localStorage.getItem("draft"); if(d){ const draft=migrate(JSON.parse(d));
     // a draft can point at uploads that were never saved; keep the saved block list in that case
-    if(draft.blocks.some(b=>(b.src||"").startsWith("pending/")||(b.photo||"").startsWith("pending/"))) draft.blocks=state.blocks;
+    const unsaved=b=>(b.src||"").startsWith("pending/")||(b.photo||"").startsWith("pending/");
+    for(const k of Object.keys(draft.designs)) if(draft.designs[k].blocks.some(unsaved)) draft.designs[k].blocks=state.designs[k].blocks;
     state=draft; dirty=true; setStatus("נטענה טיוטה שלא נשמרה"); } }catch(e){}
-  fillForm(); render(); health();
+  fillForm(); setView(view); health();
 })();
 </script>
 </body>
