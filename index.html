@@ -247,13 +247,13 @@ function wrapLines(ctx,text,maxW){
   return out;
 }
 // draws wrapped RTL text; returns the height it used (600px units).
-// Line metrics follow Canva: a line box is 1.18 x size, following lines step by lineHeight x 0.9 x size.
+// Line metrics follow Canva: the first line box is 1.16 x size, following lines step by lineHeight x size.
 function text(ctx,{t,x,y,w,size,weight=400,color,align="right",lh=1.4}){
   if(!String(t??"").trim()) return 0;
   ctx.font=fontCss(weight,size); ctx.fillStyle=color; ctx.direction="rtl"; ctx.textBaseline="middle";
   ctx.textAlign=align==="center"?"center":"right";
-  const X=(align==="center"? x+w/2 : x+w)*S, h0=size*1.18, step=Math.max(size*lh*0.9,size*1.15);
-  const lines=wrapLines(ctx,t,w*S*1.03);   // Canva wraps a touch later than a strict width check
+  const X=(align==="center"? x+w/2 : x+w)*S, h0=size*1.16, step=size*lh;
+  const lines=wrapLines(ctx,t,w*S*1.015);   // Canva wraps a touch later than a strict width check
   lines.forEach((l,i)=>ctx.fillText(l,X,(y+h0/2+i*step)*S));
   return h0+(lines.length-1)*step;
 }
@@ -287,7 +287,7 @@ const R = {
     rect(ctx,24,16,552,H,24,b.soft);
     if(photo) cover(ctx,photo,48,44,196,244);
     if(tagH){ ctx.font=fontCss(700,14); const tw=Math.max(110,ctx.measureText(f.tag).width/S+40);
-      rect(ctx,548-tw,44,tw,34,17,b.pill); text(ctx,{t:f.tag,x:548-tw,y:61-14*1.18/2,w:tw,size:14,weight:700,color:b.ink,align:"center"}); }
+      rect(ctx,548-tw,44,tw,34,17,b.pill); text(ctx,{t:f.tag,x:548-tw,y:61-14*1.16/2,w:tw,size:14,weight:700,color:b.ink,align:"center"}); }
     text(ctx,{t:f.title,x:252,y:ty,w:300,size:31,weight:700,color:b.ink,lh:1.15});
     text(ctx,{t:f.text,x:258,y:subTop,w:290,size:17,color:b.ink});
     if(b.decor){ const cy=16+H-36; curve(ctx,420,cy,"M128,2 H18 A16,16 0 0 0 2,18",b.brand); dot(ctx,422,cy+18,7,b.brand); }
@@ -319,7 +319,7 @@ const R = {
     if(tops.length>1) rect(ctx,555,tops[0]+20,2,tops.at(-1)-tops[0],0,b.soft);
     steps.forEach(([s,d],i)=>{ const t=tops[i];
       dot(ctx,556,t+20,20,b.brand);
-      text(ctx,{t:String(i+1),x:536,y:t+20-18*1.18/2,w:40,size:18,weight:700,color:"#ffffff",align:"center"});
+      text(ctx,{t:String(i+1),x:536,y:t+20-18*1.16/2,w:40,size:18,weight:700,color:"#ffffff",align:"center"});
       const hs=text(ctx,{t:s,x:24,y:t-2,w:496,size:20,weight:700,color:b.ink});
       text(ctx,{t:d,x:24,y:t-2+(hs?28:0),w:496,size:16,color:b.ink});
     });
