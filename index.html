@@ -36,9 +36,10 @@ h2{font-size:13px;margin:0 0 12px;font-weight:700;text-transform:uppercase;lette
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (max-width:520px){.row{grid-template-columns:1fr}}
 label{display:grid;gap:4px;font-size:13px;font-weight:500;color:var(--muted)}
-input[type=text],input[type=date],select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+input[type=text],input[type=date],select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:4.6em;line-height:1.45}
 input[type=color]{width:100%;height:38px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:3px}
-input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .check{display:flex;gap:8px;align-items:center;color:var(--fg);font-weight:400}
 button{font:inherit;font-weight:600;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:8px 16px;cursor:pointer}
 button:hover{border-color:var(--brand)}
@@ -46,23 +47,30 @@ button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(-
 button.small{padding:4px 10px;font-size:13px;font-weight:500}
 button.danger{color:var(--danger)}
 button:disabled{opacity:.45;cursor:not-allowed}
-.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .status{font-size:13px;color:var(--muted);min-height:1.5em}
 .status.ok{color:var(--ok)} .status.err{color:var(--danger)}
-.pill-preview{font-size:13px;color:var(--muted)}
+.pill-preview{font-size:13px;color:var(--muted);margin:0}
 .pill-preview b{color:var(--fg)}
 ol.blocks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-ol.blocks li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg)}
-ol.blocks img{width:72px;height:44px;object-fit:cover;object-position:top;border-radius:6px;border:1px solid var(--line);background:#fff}
-ol.blocks .meta{display:grid;gap:6px;min-width:0}
+ol.blocks > li{border:1px solid var(--line);border-radius:10px;background:var(--bg);min-width:0}
+ol.blocks > li.active{border-color:var(--brand)}
+ol.blocks summary{display:flex;gap:8px;align-items:center;padding:10px 12px;cursor:pointer;list-style:none;font-weight:600}
+ol.blocks summary::-webkit-details-marker{display:none}
+ol.blocks summary::before{content:"‹";display:inline-block;color:var(--muted);transition:transform .15s}
+ol.blocks details[open] summary::before{transform:rotate(-90deg)}
+ol.blocks .num{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500;min-width:1.4em}
+ol.blocks .body{display:grid;gap:10px;padding:0 12px 12px}
 ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
-.tag{font-size:11px;font-weight:700;color:var(--brand);border:1px solid var(--brand);border-radius:999px;padding:0 6px;margin-inline-start:6px;white-space:nowrap}
+.tag{font-size:11px;font-weight:700;color:var(--brand);border:1px solid var(--brand);border-radius:999px;padding:0 6px;white-space:nowrap}
 .proof{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:grid;gap:10px;min-width:0}
-.proof .sheet{background:#f8fafb;box-shadow:var(--paper-shadow);border-radius:4px;overflow:hidden;max-height:calc(100vh - 120px);overflow-y:auto}
+.proof .sheet{background:#f8fafb;box-shadow:var(--paper-shadow);border-radius:4px;overflow:hidden}
+.proof .sheet.scroll{max-height:calc(100vh - 360px);min-height:300px;overflow-y:auto}
 .proof .sheet > *{display:block;width:100%;height:auto}
+.proof .sheet canvas.blk{cursor:pointer}
+.proof .sheet canvas.blk:hover{outline:2px dashed var(--brand);outline-offset:-2px}
 .proof .label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
-.hint{font-size:12px;color:var(--muted)}
-.dirty-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warm);margin-inline-end:6px;vertical-align:middle}
+.hint{font-size:12px;color:var(--muted);margin:0}
 .offline{position:fixed;inset-inline:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--danger);color:#fff;text-align:center;font-weight:600}
 @media (prefers-reduced-motion:no-preference){button{transition:border-color .15s}}
 </style>
@@ -70,7 +78,7 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
 <body>
 
 <header class="top">
-  <h1>עורך דיוור AutoSuccess<small>באנר עליון, Header ובלוקים לדיוור. כל ייצוא ב-1200px (פי 2 מרוחב 600).</small></h1>
+  <h1>עורך דיוור AutoSuccess<small>באנר עליון וכל בלוקי הדיוור. כל ייצוא ב-1200px (פי 2 מרוחב 600).</small></h1>
   <div class="actions">
     <span id="status" class="status" role="status"></span>
     <button id="saveBtn" class="primary" type="button">שמור שינויים</button>
@@ -95,17 +103,30 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
         </label>
         <label for="customDate" id="customWrap" hidden>טקסט תאריך<input id="customDate" type="text" autocomplete="off"></label>
       </div>
-      <p class="pill-preview">יופיע בתגית: <b id="pillText"></b></p>
+      <p class="pill-preview">יופיע בתגית וב-Header: <b id="pillText"></b></p>
       <label for="title">כותרת<input id="title" type="text" autocomplete="off"></label>
       <label for="slogan">סלוגן<input id="slogan" type="text" autocomplete="off"></label>
     </div>
 
     <div class="panel">
+      <h2>בלוקים בדיוור</h2>
+      <p class="hint">פותחים בלוק כדי לערוך את הטקסטים שלו. אפשר גם ללחוץ על בלוק בתצוגה המקדימה. ירידת שורה בטקסט: Enter.</p>
+      <ol class="blocks" id="blockList"></ol>
+      <div class="actions">
+        <label for="addType" style="display:flex;gap:8px;align-items:center">הוסף בלוק
+          <select id="addType" style="width:auto"></select>
+        </label>
+        <button id="addBlock" class="small" type="button">+ הוסף</button>
+        <input id="filePick" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      </div>
+    </div>
+
+    <div class="panel">
       <h2>עיצוב</h2>
       <div class="row">
-        <label for="font">פונט
+        <label for="font">פונט (לכל הדיוור)
           <select id="font">
-            <option value="Arimo">Arimo (כמו הבלוקים מקנבה)</option>
+            <option value="Arimo">Arimo (כמו בקנבה)</option>
             <option value="Heebo">Heebo (פונט המותג)</option>
             <option value="Rubik">Rubik</option>
             <option value="Assistant">Assistant</option>
@@ -119,54 +140,74 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
       </div>
       <div class="row">
         <label for="pill">צבע תגית<input id="pill" type="color"></label>
-        <label for="soft">צבע עיגול רקע<input id="soft" type="color"></label>
+        <label for="soft">צבע כרטיסים וקווים<input id="soft" type="color"></label>
       </div>
       <div class="actions"><button id="resetColors" class="small" type="button">החזר צבעי מותג</button></div>
-    </div>
-
-    <div class="panel">
-      <h2>בלוקים בדיוור</h2>
-      <p class="hint">החלפת תמונה: “החלף” ובוחרים קובץ. רוחב מומלץ 1200px. ה-Header מתעדכן לבד עם מספר ותאריך הדיוור.</p>
-      <ol class="blocks" id="blockList"></ol>
-      <div class="actions">
-        <button id="addBlock" type="button">+ הוסף בלוק מתמונה</button>
-        <input id="filePick" type="file" accept="image/png,image/jpeg,image/webp" hidden>
-      </div>
     </div>
 
     <div class="panel">
       <h2>ייצוא</h2>
       <div class="actions">
         <button id="dlBanner" class="primary" type="button">הורד באנר PNG</button>
-        <button id="dlHeader" type="button">הורד Header PNG</button>
         <button id="dlAll" type="button">הורד דיוור מלא PNG</button>
       </div>
-      <p class="hint" id="dlHint"></p>
+      <p class="hint">כל בלוק לחוד: פותחים אותו ולוחצים “הורד PNG”. הקבצים יורדים לתיקיית ההורדות של המחשב.</p>
     </div>
   </section>
 
   <aside class="proof" aria-label="תצוגה מקדימה">
     <div class="label"><span>באנר עליון · 600×200</span><span>תצוגה חיה</span></div>
     <div class="sheet"><canvas id="bannerCanvas" width="1200" height="400"></canvas></div>
-    <div class="label"><span>הדיוור לפי סדר הבלוקים · 600px</span></div>
-    <div class="sheet" id="stack"></div>
+    <div class="label"><span>הדיוור לפי סדר הבלוקים · 600px</span><span>לחיצה על בלוק פותחת אותו לעריכה</span></div>
+    <div class="sheet scroll" id="stack"></div>
   </aside>
 </main>
 
 <div id="offline" class="offline" role="alert" hidden>אין כרגע חיבור לשרת. אפשר להמשיך לערוך; השמירה תעבוד כשהחיבור יחזור (בדרך כלל תוך דקה).</div>
 <script>
-const DEFAULT = {"banner":{"issue":"01","date":"2026-10-06","dateFormat":"month","customDate":"","title":"הניוזלטר של AutoSuccess","slogan":"אוטומציה שמבינה אותך, עסק שמרוויח.","font":"Arimo","brand":"#4a9fd1","ink":"#12384f","pill":"#f4c7a6","soft":"#ddf3fa","decor":true},
- "blocks":[{"name":"Header","src":"blocks/01-header.png","live":"header"},{"name":"Hero","src":"blocks/02-hero.png"},{"name":"טקסט","src":"blocks/03-text.png"},{"name":"תמונה","src":"blocks/04-image.png"},{"name":"3 שלבים","src":"blocks/05-steps.png"},{"name":"תובנה","src":"blocks/06-insight.png"},{"name":"CTA","src":"blocks/07-cta.png"},{"name":"טקסט סיום","src":"blocks/08-closing-text.png"},{"name":"חתימה","src":"blocks/09-signature.png"},{"name":"Footer","src":"blocks/10-footer.png"}]};
+/* ======================= block catalogue =======================
+   Every block is drawn from the Canva master (page "Sample Newsletter", 600px wide).
+   Coordinates are 600px units, block-local; the canvas is drawn at 2x. Text wraps and
+   cards grow with it, so edited copy never overflows. */
+const TYPES = {
+  header:   {label:"Header (מספר ותאריך)", fields:[]},
+  hero:     {label:"Hero", photo:true, fields:[["tag","תגית"],["title","כותרת",1],["text","טקסט",1]],
+             defaults:{tag:"טיפ מעשי", title:"לפני שמאוטמטים —\nעוצרים.", text:"כי לפני שמחברים עוד כלי ועוד אוטומציה, צריך להבין מה באמת קורה בעסק."}, photoSrc:"assets/photos/hero.png"},
+  text:     {label:"טקסט", fields:[["title","כותרת"],["text","פסקה",1]],
+             defaults:{title:"יש לכם תהליך שלא עובד?", text:"הרבה פעמים הדבר הראשון שעושים הוא לחפש כלי שיפתור את הבעיה. אבל לפני שבוחרים כלי, כדאי לעצור לרגע ולשאול: מה באמת קורה כאן היום?"}},
+  image:    {label:"תמונה + כיתוב", photo:true, fields:[["caption","כיתוב (אפשר להשאיר ריק)"]],
+             defaults:{caption:"לפני שבונים אוטומציה, ממפים את התהליך הקיים."}, photoSrc:"assets/photos/main.png"},
+  steps:    {label:"3 שלבים", fields:[["title","כותרת"],["s1","שלב 1"],["d1","תיאור שלב 1"],["s2","שלב 2"],["d2","תיאור שלב 2"],["s3","שלב 3"],["d3","תיאור שלב 3"]],
+             defaults:{title:"אז מאיפה מתחילים?", s1:"עוצרים", d1:"מה קורה היום בפועל?", s2:"ממפים", d2:"איפה הזמן הולך לאיבוד?", s3:"מזהים", d3:"מה באמת שווה לאוטמט?"}},
+  insight:  {label:"תובנה", fields:[["label","תווית קטנה"],["title","כותרת"],["text","טקסט",1]],
+             defaults:{label:"INSIGHT 01", title:"התובנה של השבוע", text:"לא כל דבר שיכול להיות אוטומטי — צריך להיות אוטומטי.\nהערך נמצא במקום שבו האוטומציה באמת פותרת בעיה."}},
+  cta:      {label:"CTA (כפתור)", fields:[["title","כותרת"],["button","טקסט הכפתור"]],
+             defaults:{title:"בואו נעשה סדר בתהליך שלכם", button:"רוצים לבדוק איפה אפשר לייעל? ←"}},
+  closing:  {label:"טקסט סיום", fields:[["text","טקסט",1]],
+             defaults:{text:"אם יש לכם תהליך שאתם מרגישים ש\"פשוט לא מסתדר\" — לפעמים לא צריך עוד כלי. צריך מישהו שיעצור איתכם רגע ויבין מה באמת קורה."}},
+  signature:{label:"חתימה", fields:[["text","חתימה"]], defaults:{text:"רויזי | AutoSuccess"}},
+  footer:   {label:"Footer", fields:[["tagline","סלוגן"],["links","שורת קישורים"]],
+             defaults:{tagline:"אוטומציה שמבינה אותך, עסק שמרוויח.", links:"פרטי קשר  |  אתר  |  הסרה מרשימת התפוצה"}},
+  upload:   {label:"תמונה מוכנה", fields:[]}
+};
+const ORDER = ["header","hero","text","image","steps","insight","cta","closing","signature","footer"];
+const newBlock = type => ({type, name:TYPES[type].label, f:{...(TYPES[type].defaults||{})}, ...(TYPES[type].photoSrc?{photo:TYPES[type].photoSrc}:{})});
+
+const DEFAULT = {
+  banner:{issue:"01",date:"2026-10-06",dateFormat:"month",customDate:"",title:"הניוזלטר של AutoSuccess",slogan:"אוטומציה שמבינה אותך, עסק שמרוויח.",font:"Arimo",brand:"#4a9fd1",ink:"#12384f",pill:"#f4c7a6",soft:"#ddf3fa",decor:true},
+  blocks: ORDER.map(newBlock)
+};
 const BRAND = {brand:"#4a9fd1",ink:"#12384f",pill:"#f4c7a6",soft:"#ddf3fa"};
 const FIELDS = ["issue","date","dateFormat","customDate","title","slogan","font","brand","ink","pill","soft","decor"];
+const PAGE_BG="#f8fafb", MUTED="#6b8597", S=2;
 const $ = id => document.getElementById(id);
 
 let state = structuredClone(DEFAULT);
 let dirty = false;
 const pending = {};        // path -> Blob (uploads not yet saved)
 const localUrls = {};      // path -> blob: URL for this session
-const imgCache = {};       // src -> Promise<HTMLImageElement>
-
+const imgCache = {};       // url -> Promise<HTMLImageElement>
+const openSet = new Set(); // indices of blocks whose editor is open
 
 /* ---------- helpers ---------- */
 const srcUrl = p => localUrls[p] || p;
@@ -186,13 +227,168 @@ function dateText(b){
 const pillText = b => [`דיוור #${b.issue}`, dateText(b)].filter(Boolean).join(" · ");
 function setStatus(msg, kind=""){const s=$("status");s.textContent=msg;s.className="status "+kind;}
 function markDirty(){dirty=true;setStatus("יש שינויים שלא נשמרו");try{localStorage.setItem("draft",JSON.stringify(state));}catch(e){}}
-function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
 function fitFont(ctx, text, weight, size, family, maxW){
   let s=size; do{ctx.font=`${weight} ${s}px "${family}", Arial, sans-serif`;}while(ctx.measureText(text).width>maxW && --s>14);
   return s;
 }
 
-/* ---------- drawing (coordinates are 2x of the 600px Canva layout) ---------- */
+/* ---------- drawing primitives (600px units, drawn at 2x) ---------- */
+const fontCss = (w,size) => `${w} ${size*S}px "${state.banner.font}", Arial, sans-serif`;
+function rect(ctx,x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x*S,y*S,w*S,h*S,r*S);ctx.fill();}
+function dot(ctx,cx,cy,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.arc(cx*S,cy*S,r*S,0,Math.PI*2);ctx.fill();}
+function wrapLines(ctx,text,maxW){
+  const out=[];
+  for(const para of String(text??"").split("\n")){
+    const words=para.split(/\s+/).filter(Boolean); let line="";
+    if(!words.length){out.push("");continue;}
+    for(const w of words){const t=line?line+" "+w:w; if(line && ctx.measureText(t).width>maxW){out.push(line);line=w;} else line=t;}
+    out.push(line);
+  }
+  return out;
+}
+// draws wrapped RTL text; returns the height it used (600px units)
+function text(ctx,{t,x,y,w,size,weight=400,color,align="right",lh=1.4}){
+  if(!String(t??"").trim()) return 0;
+  ctx.font=fontCss(weight,size); ctx.fillStyle=color; ctx.direction="rtl"; ctx.textBaseline="middle";
+  ctx.textAlign=align==="center"?"center":"right";
+  const X=(align==="center"? x+w/2 : x+w)*S, L=size*lh, lines=wrapLines(ctx,t,w*S);
+  lines.forEach((l,i)=>ctx.fillText(l,X,(y+i*L+L/2)*S));
+  return lines.length*L;
+}
+function cover(ctx,img,x,y,w,h){
+  const r=Math.max(w/img.naturalWidth,h/img.naturalHeight), sw=w/r, sh=h/r;
+  ctx.drawImage(img,(img.naturalWidth-sw)/2,(img.naturalHeight-sh)/2,sw,sh,x*S,y*S,w*S,h*S);
+}
+function curve(ctx,ox,oy,d,color){ // Canva's "signature" stroke, path in its own box at (ox,oy)
+  ctx.save(); ctx.translate(ox*S,oy*S); ctx.scale(S,S); ctx.strokeStyle=color; ctx.lineWidth=3; ctx.stroke(new Path2D(d)); ctx.restore();
+}
+const logoBox = (ctx,logo,x,y,w,h) => ctx.drawImage(logo,16,2,256,248,x*S,y*S,w*S,h*S); // logo.png region = the Canva logo frame
+
+/* ---------- block renderers: draw at y=0 and return the block height ---------- */
+const R = {
+  async header(ctx){
+    const b=state.banner, logo=await loadImg("logo.png");
+    rect(ctx,24,24,552,104,16,"#ffffff");
+    logoBox(ctx,logo,472,30,96,92);
+    text(ctx,{t:`דיוור #${b.issue}\n${dateText(b)}`,x:48,y:54,w:200,size:14,color:b.ink,lh:1.5});
+    rect(ctx,24,126,552,3,0,b.brand);
+    return 144;
+  },
+  async hero(ctx,f,blk){
+    const b=state.banner, photo=await loadImg(blk.photo).catch(()=>null);
+    // measure the text column first so the card can grow
+    const off=document.createElement("canvas").getContext("2d");
+    const tagH = f.tag?.trim()?34+14:0, ty=44+tagH;
+    const titleH=text(off,{t:f.title,x:252,y:0,w:300,size:31,weight:700,lh:1.15});
+    const subH=text(off,{t:f.text,x:258,y:0,w:290,size:17,lh:1.4});
+    const subTop=ty+titleH+(titleH?18:0), H=Math.max(300, subTop+subH+92-16);
+    rect(ctx,24,16,552,H,24,b.soft);
+    if(photo) cover(ctx,photo,48,44,196,244);
+    if(tagH){ ctx.font=fontCss(700,14); const tw=Math.max(110,ctx.measureText(f.tag).width/S+40);
+      rect(ctx,548-tw,44,tw,34,17,b.pill); text(ctx,{t:f.tag,x:548-tw,y:44+(34-19.6)/2,w:tw,size:14,weight:700,color:b.ink,align:"center"}); }
+    text(ctx,{t:f.title,x:252,y:ty,w:300,size:31,weight:700,color:b.ink,lh:1.15});
+    text(ctx,{t:f.text,x:258,y:subTop,w:290,size:17,color:b.ink});
+    if(b.decor){ const cy=16+H-36; curve(ctx,420,cy,"M128,2 H18 A16,16 0 0 0 2,18",b.brand); dot(ctx,422,cy+18,7,b.brand); }
+    return 16+H+20;
+  },
+  async text(ctx,f){
+    const b=state.banner;
+    const h1=text(ctx,{t:f.title,x:24,y:20,w:552,size:28,weight:700,color:b.ink,lh:1.2});
+    let y=20;
+    if(h1){ rect(ctx,506,20+h1+11,70,3,0,b.brand); y=20+h1+27; }
+    const h2=text(ctx,{t:f.text,x:24,y,w:552,size:18,color:b.ink,lh:1.5});
+    return y+h2+20;
+  },
+  async image(ctx,f,blk){
+    const photo=await loadImg(blk.photo).catch(()=>null);
+    if(photo) cover(ctx,photo,24,20,552,296); else rect(ctx,24,20,552,296,0,state.banner.soft);
+    const h=text(ctx,{t:f.caption,x:24,y:326,w:552,size:14,color:MUTED});
+    return h? 326+h+18 : 336;
+  },
+  async steps(ctx,f){
+    const b=state.banner;
+    const h1=text(ctx,{t:f.title,x:24,y:20,w:552,size:26,weight:700,color:b.ink});
+    const steps=[1,2,3].map(n=>[f["s"+n],f["d"+n]]).filter(([s,d])=>(s||"").trim()||(d||"").trim());
+    let y=h1? 20+h1+14 : 20; const tops=[];
+    const off=document.createElement("canvas").getContext("2d");
+    for(const [s,d] of steps){ tops.push(y);
+      const hs=text(off,{t:s,x:24,y:0,w:496,size:20,weight:700}), hd=text(off,{t:d,x:24,y:0,w:496,size:16});
+      y+=Math.max(48, hs+hd)+18; }
+    if(tops.length>1) rect(ctx,555,tops[0]+20,2,tops.at(-1)-tops[0],0,b.soft);
+    steps.forEach(([s,d],i)=>{ const t=tops[i];
+      dot(ctx,556,t+20,20,b.brand);
+      text(ctx,{t:String(i+1),x:536,y:t+7.4,w:40,size:18,weight:700,color:"#ffffff",align:"center"});
+      const hs=text(ctx,{t:s,x:24,y:t-2,w:496,size:20,weight:700,color:b.ink});
+      text(ctx,{t:d,x:24,y:t-2+(hs?28:0),w:496,size:16,color:b.ink});
+    });
+    return tops.length? tops.at(-1)+61 : y+16;
+  },
+  async insight(ctx,f){
+    const b=state.banner, off=document.createElement("canvas").getContext("2d");
+    let y=39; const parts=[];
+    const hl=text(off,{t:f.label,x:48,y:0,w:504,size:13,weight:700}); if(hl){parts.push(["label",y]); y+=hl+3.8;}
+    const ht=text(off,{t:f.title,x:48,y:0,w:504,size:25,weight:700}); if(ht){parts.push(["title",y]); y+=ht+7;}
+    const hx=text(off,{t:f.text,x:48,y:0,w:504,size:17,lh:1.45}); if(hx){parts.push(["text",y]); y+=hx;}
+    const H=Math.max(200, y-17+64);
+    rect(ctx,24,17,552,H,20,b.soft);
+    for(const [k,py] of parts){
+      if(k==="label") text(ctx,{t:f.label,x:48,y:py,w:504,size:13,weight:700,color:b.brand});
+      if(k==="title") text(ctx,{t:f.title,x:48,y:py,w:504,size:25,weight:700,color:b.ink});
+      if(k==="text")  text(ctx,{t:f.text,x:48,y:py,w:504,size:17,color:b.ink,lh:1.45});
+    }
+    if(b.decor){ const cy=17+H-48; curve(ctx,48,cy,"M0,2 H82 A16,16 0 0 1 98,18",b.brand); dot(ctx,146,cy+18,7,b.brand); }
+    return 17+H+17;
+  },
+  async cta(ctx,f){
+    const b=state.banner;
+    const h=text(ctx,{t:f.title,x:24,y:17,w:552,size:22,weight:700,color:b.ink,align:"center"});
+    const top=h? 17+h+9.4 : 17;
+    ctx.font=fontCss(700,18); const bw=Math.min(552,Math.max(340,ctx.measureText(f.button||"").width/S+64));
+    const bx=300-bw/2, bh=text(document.createElement("canvas").getContext("2d"),{t:f.button,x:bx+24,y:0,w:bw-48,size:18,weight:700});
+    const H=Math.max(56,bh+30.8);
+    rect(ctx,bx,top,bw,H,28,b.brand);
+    text(ctx,{t:f.button,x:bx+24,y:top+(H-bh)/2,w:bw-48,size:18,weight:700,color:"#ffffff",align:"center"});
+    return top+H+19;
+  },
+  async closing(ctx,f){
+    const h=text(ctx,{t:f.text,x:24,y:19,w:552,size:18,color:state.banner.ink,lh:1.5});
+    return 19+h+21.4;
+  },
+  async signature(ctx,f){
+    const h=text(ctx,{t:f.text,x:24,y:22,w:552,size:18,weight:700,color:state.banner.brand});
+    return 22+h+28.6;
+  },
+  async footer(ctx,f){
+    const b=state.banner, logo=await loadImg("logo.png");
+    rect(ctx,24,20,552,2,0,b.soft);
+    logoBox(ctx,logo,252,36,96,92);
+    let y=138;
+    y+=text(ctx,{t:f.tagline,x:24,y,w:552,size:16,weight:700,color:b.ink,align:"center"})||0;
+    y=Math.max(y+7.6,168);
+    y+=text(ctx,{t:f.links,x:24,y,w:552,size:12,color:MUTED,align:"center"});
+    rect(ctx,24,y+17.2,552,2,0,b.soft);
+    return Math.max(270,y+85.2);
+  },
+  async upload(ctx,f,blk){
+    const img=await loadImg(blk.src);
+    const h=img.naturalHeight*600/img.naturalWidth;
+    ctx.drawImage(img,0,0,1200,h*S);
+    return h;
+  }
+};
+
+async function renderBlock(blk){
+  await document.fonts.load(`700 20px "${state.banner.font}"`); await document.fonts.load(`400 20px "${state.banner.font}"`);
+  const scratch=document.createElement("canvas"); scratch.width=1200; scratch.height=8000;
+  const ctx=scratch.getContext("2d");
+  ctx.fillStyle=PAGE_BG; ctx.fillRect(0,0,1200,8000);
+  const h=Math.ceil(await R[blk.type](ctx,blk.f||{},blk)*S);
+  const c=document.createElement("canvas"); c.width=1200; c.height=Math.max(2,h);
+  c.getContext("2d").drawImage(scratch,0,0);
+  return c;
+}
+
+/* ---------- banner ---------- */
 async function drawBanner(canvas){
   const b = state.banner, ctx = canvas.getContext("2d");
   await document.fonts.load(`700 48px "${b.font}"`); await document.fonts.load(`400 32px "${b.font}"`);
@@ -208,69 +404,90 @@ async function drawBanner(canvas){
   }
   ctx.drawImage(logo,884,66,288,252);
   ctx.direction="rtl"; ctx.textAlign="right"; ctx.textBaseline="top";
-  const R=868, maxW=560;
-  ctx.fillStyle=b.ink; fitFont(ctx,b.title,700,48,b.font,maxW); ctx.fillText(b.title,R,90);
-  ctx.fillStyle=b.brand; fitFont(ctx,b.slogan,400,32,b.font,maxW); ctx.fillText(b.slogan,R,174);
+  const Rx=868, maxW=560;
+  ctx.fillStyle=b.ink; fitFont(ctx,b.title,700,48,b.font,maxW); ctx.fillText(b.title,Rx,90);
+  ctx.fillStyle=b.brand; fitFont(ctx,b.slogan,400,32,b.font,maxW); ctx.fillText(b.slogan,Rx,174);
   const t=pillText(b); fitFont(ctx,t,700,26,b.font,maxW-56);
   const w=ctx.measureText(t).width+56;
-  ctx.fillStyle=b.pill; roundRect(ctx,R-w,248,w,60,30); ctx.fill();
-  ctx.fillStyle=b.ink; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(t,R-w/2,279);
+  ctx.fillStyle=b.pill; ctx.beginPath(); ctx.roundRect(Rx-w,248,w,60,30); ctx.fill();
+  ctx.fillStyle=b.ink; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(t,Rx-w/2,279);
   ctx.fillStyle=b.brand; ctx.fillRect(0,388,1200,12);
   ctx.restore();
 }
-async function drawHeader(canvas, src){
-  const b=state.banner, img=await loadImg(src), ctx=canvas.getContext("2d");
-  canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
-  await document.fonts.load(`400 28px "${b.font}"`);
-  ctx.drawImage(img,0,0);
-  ctx.fillStyle="#ffffff"; ctx.fillRect(88,96,420,100);   // cover the old "issue / date" text inside the white card
-  ctx.direction="rtl"; ctx.textAlign="right"; ctx.textBaseline="top"; ctx.fillStyle=b.ink;
-  ctx.font=`400 28px "${b.font}", Arial, sans-serif`;
-  ctx.fillText(`דיוור #${b.issue}`,496,110);
-  ctx.fillText(dateText(b),496,152);
-}
 
-/* ---------- render ---------- */
+/* ---------- preview ---------- */
 function fillForm(){
   const b=state.banner;
   for(const f of FIELDS){const el=$(f); if(!el) continue; el.type==="checkbox"?el.checked=!!b[f]:el.value=b[f]??"";}
   $("customWrap").hidden = b.dateFormat!=="custom";
 }
-let renderToken=0;
-async function render(){
+let renderToken=0, queued=false;
+function schedule(){ if(queued) return; queued=true; requestAnimationFrame(()=>{queued=false; renderPreview();}); }
+async function renderPreview(){
   const my=++renderToken, b=state.banner;
   $("pillText").textContent=pillText(b);
   $("customWrap").hidden = b.dateFormat!=="custom";
   await drawBanner($("bannerCanvas"));
-  renderList();
-  const nodes = await Promise.all(state.blocks.map(async blk=>{
-    if(blk.live==="header"){const c=document.createElement("canvas"); await drawHeader(c,blk.src); return c;}
-    const i=new Image(); i.alt=blk.name; i.src=srcUrl(blk.src); return i;
-  }).map(p=>p.catch(()=>{const d=document.createElement("div");d.textContent="תמונה חסרה";d.style.padding="20px";return d;})));
-  if(my===renderToken) $("stack").replaceChildren(...nodes);
+  const nodes = await Promise.all(state.blocks.map((blk,i)=>renderBlock(blk).then(c=>{
+    c.className="blk"; c.title=`${blk.name} · לחצו לעריכה`; c.addEventListener("click",()=>openBlock(i)); return c;
+  }).catch(()=>{const d=document.createElement("div");d.textContent=`${blk.name}: התמונה לא נטענה`;d.style.padding="20px";return d;})));
+  if(my===renderToken){ const st=$("stack"), top=st.scrollTop; st.replaceChildren(...nodes); st.scrollTop=top; }
+}
+function render(){ renderList(); schedule(); }
+
+/* ---------- block list + editors ---------- */
+function openBlock(i){
+  openSet.add(i); renderList();
+  const li=$("blockList").children[i]; li?.scrollIntoView({behavior:"smooth",block:"nearest"});
+  li?.querySelector("input,textarea")?.focus({preventScroll:true});
 }
 function renderList(){
   const ol=$("blockList"); ol.replaceChildren();
   state.blocks.forEach((blk,i)=>{
-    const li=document.createElement("li");
-    const img=new Image(); img.src=srcUrl(blk.src); img.alt="";
-    const meta=document.createElement("div"); meta.className="meta";
-    const name=document.createElement("input"); name.type="text"; name.value=blk.name; name.id="bname-"+i; name.setAttribute("aria-label","שם הבלוק");
-    name.addEventListener("change",()=>{blk.name=name.value.trim()||"בלוק";markDirty();});
+    const T=TYPES[blk.type], li=document.createElement("li"), det=document.createElement("details");
+    det.open=openSet.has(i); li.classList.toggle("active",det.open);
+    det.addEventListener("toggle",()=>{det.open?openSet.add(i):openSet.delete(i); li.classList.toggle("active",det.open);});
+    const sum=document.createElement("summary");
+    const num=document.createElement("span"); num.className="num"; num.textContent=i+1;
+    const nm=document.createElement("span"); nm.textContent=blk.name;
+    sum.append(num,nm);
+    if(blk.type==="header"){const t=document.createElement("span");t.className="tag";t.textContent="מתעדכן מהבאנר";sum.append(t);}
+    const body=document.createElement("div"); body.className="body";
+
+    const nameL=document.createElement("label"); nameL.htmlFor=`b${i}-name`; nameL.textContent="שם הבלוק (רק לעורך)";
+    const name=document.createElement("input"); name.type="text"; name.id=`b${i}-name`; name.value=blk.name;
+    name.addEventListener("input",()=>{blk.name=name.value.trim()||T.label; nm.textContent=blk.name; markDirty();});
+    nameL.append(name); body.append(nameL);
+
+    for(const [key,label,multi] of T.fields){
+      const l=document.createElement("label"); l.htmlFor=`b${i}-${key}`; l.textContent=label;
+      const el=document.createElement(multi?"textarea":"input"); if(!multi) el.type="text";
+      el.id=`b${i}-${key}`; el.value=blk.f[key]??""; el.autocomplete="off"; if(multi) el.rows=3;
+      el.addEventListener("input",()=>{blk.f[key]=el.value; markDirty(); schedule();});
+      l.append(el); body.append(l);
+    }
+    if(blk.type==="header"){const p=document.createElement("p");p.className="hint";p.textContent="המספר והתאריך נלקחים מהבאנר העליון.";body.append(p);}
+
     const btns=document.createElement("div"); btns.className="btns";
     const mk=(txt,fn,cls="")=>{const bt=document.createElement("button");bt.type="button";bt.className="small "+cls;bt.textContent=txt;bt.addEventListener("click",fn);btns.append(bt);return bt;};
-    mk("↑",()=>move(i,-1)).disabled=i===0;
-    mk("↓",()=>move(i,1)).disabled=i===state.blocks.length-1;
-    mk("החלף",()=>pickFile(f=>replaceBlock(i,f)));
-    mk("הורד",()=>downloadBlock(i));
-    const del=mk("מחק",()=>{ if(del.dataset.armed){state.blocks.splice(i,1);markDirty();render();} else {del.dataset.armed="1";del.textContent="בטוח? לחץ שוב";setTimeout(()=>{if(del.isConnected){delete del.dataset.armed;del.textContent="מחק";}},3000);} },"danger");
-    meta.append(name);
-    if(blk.live==="header"){const t=document.createElement("span");t.className="tag";t.textContent="מתעדכן אוטומטית";name.after(t);}
-    meta.append(btns);
-    li.append(img,meta); ol.append(li);
+    mk("↑ למעלה",()=>move(i,-1)).disabled=i===0;
+    mk("↓ למטה",()=>move(i,1)).disabled=i===state.blocks.length-1;
+    if(T.photo) mk("החלף תמונה",()=>pickFile(f=>{blk.photo=stashUpload(f);markDirty();schedule();}));
+    if(blk.type==="upload") mk("החלף תמונה",()=>pickFile(f=>{blk.src=stashUpload(f);markDirty();schedule();}));
+    if(T.defaults) mk("החזר טקסט מקורי",()=>{blk.f={...T.defaults};markDirty();render();});
+    mk("שכפל",()=>{state.blocks.splice(i+1,0,structuredClone(blk));shiftOpen(i+1,1);markDirty();render();});
+    mk("הורד PNG",()=>downloadBlock(i));
+    const del=mk("מחק",()=>{ if(del.dataset.armed){state.blocks.splice(i,1);shiftOpen(i,-1);markDirty();render();} else {del.dataset.armed="1";del.textContent="בטוח? לחצו שוב";setTimeout(()=>{if(del.isConnected){delete del.dataset.armed;del.textContent="מחק";}},3000);} },"danger");
+    body.append(btns);
+    det.append(sum,body); li.append(det); ol.append(li);
   });
 }
-function move(i,d){const a=state.blocks;[a[i],a[i+d]]=[a[i+d],a[i]];markDirty();render();}
+function shiftOpen(from,d){ const s=[...openSet].map(k=>k>=from?k+d:k).filter(k=>k>=0); openSet.clear(); s.forEach(k=>openSet.add(k)); if(d>0) openSet.add(from); }
+function move(i,d){
+  const a=state.blocks; [a[i],a[i+d]]=[a[i+d],a[i]];
+  const oi=openSet.has(i), od=openSet.has(i+d); openSet.delete(i); openSet.delete(i+d); if(oi) openSet.add(i+d); if(od) openSet.add(i);
+  markDirty(); render();
+}
 
 /* ---------- uploads ---------- */
 let pickCb=null;
@@ -282,23 +499,20 @@ function stashUpload(file){
   pending[path]=file; localUrls[path]=URL.createObjectURL(file);
   return path;
 }
-function replaceBlock(i,file){
-  const blk=state.blocks[i]; blk.src=stashUpload(file); delete blk.live;  // a replaced header is a plain image
-  markDirty(); render();
-}
-$("addBlock").addEventListener("click",()=>pickFile(f=>{state.blocks.push({name:f.name.replace(/\.[^.]+$/,""),src:stashUpload(f)});markDirty();render();}));
+for(const t of Object.keys(TYPES)){const o=document.createElement("option");o.value=t;o.textContent=t==="upload"?"תמונה מוכנה (העלאת קובץ)":TYPES[t].label;$("addType").append(o);}
+$("addBlock").addEventListener("click",()=>{
+  const t=$("addType").value;
+  const add=blk=>{state.blocks.push(blk);openSet.add(state.blocks.length-1);markDirty();render();setTimeout(()=>openBlock(state.blocks.length-1));};
+  if(t==="upload") pickFile(f=>add({type:"upload",name:f.name.replace(/\.[^.]+$/,""),f:{},src:stashUpload(f)}));
+  else add(newBlock(t));
+});
 
 /* ---------- export ---------- */
-async function canvasFor(i){
-  const blk=state.blocks[i], c=document.createElement("canvas");
-  if(blk.live==="header"){await drawHeader(c,blk.src);return c;}
-  const img=await loadImg(blk.src); c.width=img.naturalWidth; c.height=img.naturalHeight; c.getContext("2d").drawImage(img,0,0); return c;
-}
 async function fullCanvas(){
-  const parts=[$("bannerCanvas")]; for(let i=0;i<state.blocks.length;i++) parts.push(await canvasFor(i));
-  const W=1200, hs=parts.map(p=>Math.round(p.height*W/p.width)), c=document.createElement("canvas");
-  c.width=W; c.height=hs.reduce((a,b)=>a+b,0); const ctx=c.getContext("2d"); let y=0;
-  parts.forEach((p,k)=>{ctx.drawImage(p,0,y,W,hs[k]); y+=hs[k];}); return c;
+  const parts=[$("bannerCanvas")]; for(const blk of state.blocks) parts.push(await renderBlock(blk));
+  const W=1200, c=document.createElement("canvas");
+  c.width=W; c.height=parts.reduce((a,p)=>a+p.height,0); const ctx=c.getContext("2d"); let y=0;
+  for(const p of parts){ctx.drawImage(p,0,y); y+=p.height;} return c;
 }
 const slug = s => s.replace(/[^\w֐-׿-]+/g,"-").replace(/^-|-$/g,"") || "block";
 async function save(canvas, filename){
@@ -309,9 +523,8 @@ async function save(canvas, filename){
 }
 const issueTag = () => `${state.banner.issue}`.replace(/\W/g,"") || "x";
 $("dlBanner").addEventListener("click",()=>save($("bannerCanvas"),`banner-diyur-${issueTag()}.png`));
-$("dlHeader").addEventListener("click",async()=>{const i=state.blocks.findIndex(b=>b.live==="header"); if(i<0){setStatus("אין בלוק Header חי ברשימה","err");return;} save(await canvasFor(i),`header-diyur-${issueTag()}.png`);});
 $("dlAll").addEventListener("click",async()=>save(await fullCanvas(),`diyur-${issueTag()}-full.png`));
-async function downloadBlock(i){ save(await canvasFor(i), `${String(i+1).padStart(2,"0")}-${slug(state.blocks[i].name)}.png`); }
+async function downloadBlock(i){ save(await renderBlock(state.blocks[i]), `diyur-${issueTag()}-${String(i+1).padStart(2,"0")}-${slug(state.blocks[i].name)}.png`); }
 
 /* ---------- persistence (server: /api/upload + /api/state, read back from data/) ---------- */
 async function call(url, opts){
@@ -330,12 +543,12 @@ $("saveBtn").addEventListener("click",async()=>{
       const f=pending[p];
       const {path}=await call("api/upload",{method:"POST",headers:{"content-type":f.type||"image/png"},body:f});
       localUrls[path]=localUrls[p];
-      state.blocks.forEach(b=>{if(b.src===p) b.src=path;});
+      state.blocks.forEach(b=>{if(b.src===p) b.src=path; if(b.photo===p) b.photo=path;});
       delete pending[p];
     }
     await call("api/state",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify(state)});
     dirty=false; try{localStorage.removeItem("draft");}catch(e){}
-    setStatus("נשמר בשרת","ok"); renderList();
+    setStatus("נשמר בשרת","ok");
   }catch(e){
     setStatus(e.http? "השרת לא קיבל את השמירה: "+e.message : "אין כרגע חיבור לשרת. נסו לשמור שוב בעוד דקה.","err");
   }finally{btn.disabled=false;}
@@ -351,20 +564,31 @@ async function health(){
 /* ---------- wiring ---------- */
 for(const f of FIELDS){
   const el=$(f); if(!el) continue;
-  el.addEventListener("input",()=>{state.banner[f]= el.type==="checkbox"?el.checked:el.value; markDirty(); render();});
+  el.addEventListener("input",()=>{state.banner[f]= el.type==="checkbox"?el.checked:el.value; markDirty(); schedule();});
 }
-$("resetColors").addEventListener("click",()=>{Object.assign(state.banner,BRAND);fillForm();markDirty();render();});
+$("resetColors").addEventListener("click",()=>{Object.assign(state.banner,BRAND);fillForm();markDirty();schedule();});
+
+// state saved by the first version of the editor held flat images (blocks/NN-*.png); turn those into live blocks
+const LEGACY = {"01":"header","02":"hero","03":"text","04":"image","05":"steps","06":"insight","07":"cta","08":"closing","09":"signature","10":"footer"};
+function migrate(s){
+  s.banner={...DEFAULT.banner,...(s.banner||{})};
+  s.blocks=(s.blocks||[]).map(b=>{
+    if(b.type && TYPES[b.type]) return {...b, f:{...(TYPES[b.type].defaults||{}),...(b.f||{})}};
+    const m=/^blocks\/(\d\d)-/.exec(b.src||"");
+    if(m && LEGACY[m[1]]) return newBlock(LEGACY[m[1]]);
+    return {type:"upload",name:b.name||"תמונה",f:{},src:b.src};
+  });
+  return s;
+}
 
 (async function boot(){
   try{ const r=await fetch("data/state.json",{cache:"no-store"}); if(r.ok) state=await r.json(); }catch(e){}
-  state.banner={...DEFAULT.banner,...state.banner};
-  try{ const d=localStorage.getItem("draft"); if(d){ const draft=JSON.parse(d);
+  state=migrate(state);
+  try{ const d=localStorage.getItem("draft"); if(d){ const draft=migrate(JSON.parse(d));
     // a draft can point at uploads that were never saved; keep the saved block list in that case
-    if(draft.blocks.some(b=>b.src.startsWith("pending/"))) draft.blocks=state.blocks;
-    state=draft; state.banner={...DEFAULT.banner,...state.banner};
-    dirty=true; setStatus("נטענה טיוטה שלא נשמרה"); } }catch(e){}
+    if(draft.blocks.some(b=>(b.src||"").startsWith("pending/")||(b.photo||"").startsWith("pending/"))) draft.blocks=state.blocks;
+    state=draft; dirty=true; setStatus("נטענה טיוטה שלא נשמרה"); } }catch(e){}
   fillForm(); render(); health();
-  $("dlHint").textContent="הקבצים יורדים לתיקיית ההורדות של המחשב.";
 })();
 </script>
 </body>
