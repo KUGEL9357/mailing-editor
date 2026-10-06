@@ -155,6 +155,28 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
       <div class="actions"><button id="resetColors" class="small" type="button">החזר צבעי מותג</button></div>
     </div>
 
+    <div class="panel" id="smoovePanel">
+      <h2>שליחה לסמוב</h2>
+      <div id="smKeyBox" hidden style="display:grid;gap:10px">
+        <p class="hint">מדביקים כאן את מפתח ה-API מסמוב (הגדרות ← API). המפתח נשמר רק בשרת ולא יוצג שוב.</p>
+        <label for="smKey">מפתח API<input id="smKey" type="password" autocomplete="off" spellcheck="false"></label>
+        <div class="actions"><button id="smConnect" class="primary" type="button">חבר לסמוב</button><button id="smCancelKey" class="small" type="button" hidden>ביטול</button></div>
+      </div>
+      <div id="smReady" hidden style="display:grid;gap:12px">
+        <label for="smSubject">נושא המייל<input id="smSubject" type="text" autocomplete="off"></label>
+        <fieldset style="border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:0;min-width:0">
+          <legend style="font-size:13px;color:var(--muted);padding:0 4px">לאילו רשימות (אפשר גם לבחור אחר כך בסמוב)</legend>
+          <div id="smLists" style="display:grid;gap:4px;max-height:160px;overflow:auto"></div>
+        </fieldset>
+        <div class="actions">
+          <button id="smCreate" class="primary" type="button">צור דיוור בסמוב</button>
+          <button id="smChangeKey" class="small" type="button">החלף מפתח</button>
+        </div>
+        <p class="hint">נוצר דיוור שמור (לא נשלח). טקסטים וכפתורים נכנסים כטקסט חי, השאר כתמונות שמתארחות ב-autosuccess.cc. בודקים בסמוב ושולחים משם.</p>
+      </div>
+      <p class="status" id="smStatus" role="status"></p>
+    </div>
+
     <div class="panel">
       <h2>ייצוא</h2>
       <div class="actions">
@@ -193,8 +215,8 @@ const TYPES = {
              defaults:{title:"אז מאיפה מתחילים?", s1:"עוצרים", d1:"מה קורה היום בפועל?", s2:"ממפים", d2:"איפה הזמן הולך לאיבוד?", s3:"מזהים", d3:"מה באמת שווה לאוטמט?"}},
   insight:  {label:"תובנה", fields:[["label","תווית קטנה"],["title","כותרת"],["text","טקסט",1]],
              defaults:{label:"INSIGHT 01", title:"התובנה של השבוע", text:"לא כל דבר שיכול להיות אוטומטי — צריך להיות אוטומטי.\nהערך נמצא במקום שבו האוטומציה באמת פותרת בעיה."}},
-  cta:      {label:"CTA (כפתור)", fields:[["title","כותרת"],["button","טקסט הכפתור"]],
-             defaults:{title:"בואו נעשה סדר בתהליך שלכם", button:"רוצים לבדוק איפה אפשר לייעל? ←"}},
+  cta:      {label:"CTA (כפתור)", fields:[["title","כותרת"],["button","טקסט הכפתור"],["link","קישור הכפתור (לאן הוא מוביל במייל)"]],
+             defaults:{title:"בואו נעשה סדר בתהליך שלכם", button:"רוצים לבדוק איפה אפשר לייעל? ←", link:"https://autosuccess.cc"}},
   closing:  {label:"טקסט סיום", fields:[["text","טקסט",1]],
              defaults:{text:"אם יש לכם תהליך שאתם מרגישים ש\"פשוט לא מסתדר\" — לפעמים לא צריך עוד כלי. צריך מישהו שיעצור איתכם רגע ויבין מה באמת קורה."}},
   signature:{label:"חתימה", fields:[["text","חתימה"]], defaults:{text:"רויזי | AutoSuccess"}},
@@ -215,7 +237,7 @@ Object.assign(TYPES,{
             defaults:{tag:"כלי מומלץ", title:"שם הכלי כאן", logoText:"לוגו הכלי"}},
   gstory:  {design:"grid", label:"כרטיס מהשטח", fields:[["tag","תגית"],["title","כותרת",1]], defaults:{tag:"מהשטח", title:"כותרת הסיפור כאן"}},
   gdivider:{design:"grid", label:"מפריד", fields:[]},
-  gcta:    {design:"grid", label:"כפתור פעולה", fields:[["button","טקסט הכפתור"]], defaults:{button:"טקסט הכפתור כאן ←"}},
+  gcta:    {design:"grid", label:"כפתור פעולה", fields:[["button","טקסט הכפתור"],["link","קישור הכפתור (לאן הוא מוביל במייל)"]], defaults:{button:"טקסט הכפתור כאן ←", link:"https://autosuccess.cc"}},
   gfooter: {design:"grid", label:"תחתית", fields:[["name","שם"],["tagline","סלוגן"],["url","כתובת אתר"]],
             defaults:{name:"AutoSuccess", tagline:"אוטומציה שמרוויחה לך כסף", url:"autosuccess.cc"}}
 });
@@ -588,6 +610,7 @@ function setView(v){
   const m=v==="master";
   $("bannerFields").hidden=!m; $("bannerPreview").hidden=!m; $("dlBanner").hidden=!m; $("pillWrap").hidden=!m;
   openSet.clear(); fillAddTypes(); render();
+  if(!smSubjectTouched && !$("smReady").hidden) $("smSubject").value=defaultSubject();
 }
 document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
 
@@ -686,6 +709,100 @@ $("dlBanner").addEventListener("click",()=>save($("bannerCanvas"),`banner-diyur-
 $("dlAll").addEventListener("click",async()=>save(await fullCanvas(),`diyur-${issueTag()}-full.png`));
 async function downloadBlock(i){ save(await renderBlock(cur()[i]), `diyur-${issueTag()}-${String(i+1).padStart(2,"0")}-${slug(cur()[i].name)}.png`); }
 
+/* ---------- email for Smoove ----------
+   Text blocks go in as live text (readable even where images are blocked), buttons as real links,
+   everything else as a 1200px image shown at 600px. */
+const esc = t => String(t??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const escBr = t => esc(t).replace(/\n/g,"<br>");
+const FONT = "Arial,Helvetica,sans-serif";
+const safeUrl = u => /^(https?:\/\/|mailto:)/i.test(String(u||"").trim()) ? String(u).trim() : "https://autosuccess.cc";
+const altOf = blk => Object.values(blk.f||{}).filter(v=>typeof v==="string" && !/^https?:/.test(v)).join(" · ").replaceAll("{גיליון}",state.banner.issue).replace(/\s+/g," ").slice(0,300);
+function td(inner, pad, extra=""){ return `<tr><td dir="rtl" style="padding:${pad};font-family:${FONT};color:${state.banner.ink};text-align:right;${extra}">${inner}</td></tr>`; }
+function buttonHtml(text, link, size){
+  const b=state.banner;
+  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td align="center" bgcolor="${b.brand}" style="border-radius:28px;background:${b.brand}">`+
+    `<a href="${esc(safeUrl(link))}" target="_blank" style="display:inline-block;padding:16px 36px;font-family:${FONT};font-size:${size}px;font-weight:bold;line-height:1.3;color:#ffffff;text-decoration:none;border-radius:28px">${esc(text)}</a></td></tr></table>`;
+}
+const LIVE = {
+  text: f => td((f.title?`<h2 style="margin:0 0 10px;font-size:28px;line-height:1.2;font-weight:bold;color:${state.banner.ink}">${esc(f.title)}</h2><div style="width:70px;height:3px;line-height:3px;font-size:0;background:${state.banner.brand};margin:0 0 14px auto"></div>`:"")+
+               `<p style="margin:0;font-size:18px;line-height:1.5">${escBr(f.text)}</p>`, "20px 24px 20px"),
+  closing: f => td(`<p style="margin:0;font-size:18px;line-height:1.5">${escBr(f.text)}</p>`, "19px 24px 21px"),
+  signature: f => td(`<p style="margin:0;font-size:18px;line-height:1.4;font-weight:bold;color:${state.banner.brand}">${escBr(f.text)}</p>`, "22px 24px 28px"),
+  gpara: f => td(`<p style="margin:0;font-size:16px;line-height:1.6">${escBr(f.text)}</p>`, "20px 40px 20px"),
+  cta: f => td((f.title?`<p style="margin:0 0 16px;font-size:22px;line-height:1.4;font-weight:bold;text-align:center">${esc(f.title)}</p>`:"")+buttonHtml(f.button,f.link,18), "17px 24px 19px", "text-align:center;"),
+  gcta: f => td(buttonHtml(f.button,f.link,21), "22px 24px 22px", "text-align:center;")
+};
+async function canvasBlob(c){ return new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/png")); }
+async function publishImage(c){
+  const {url}=await call("api/smoove/image",{method:"POST",headers:{"content-type":"image/png"},body:await canvasBlob(c)});
+  return url;
+}
+async function buildEmail(subject, progress){
+  const rows=[], imgs=[];
+  if(view==="master"){ rows.push(null); imgs.push({canvas:$("bannerCanvas"), alt:`${state.banner.title} · ${pillText(state.banner)}`, at:0}); }
+  for(const blk of cur()){
+    if(LIVE[blk.type]) rows.push(LIVE[blk.type](blk.f||{}));
+    else { rows.push(null); imgs.push({canvas:await renderBlock(blk), alt:altOf(blk)||blk.name, at:rows.length-1}); }
+  }
+  let n=0;
+  for(const im of imgs){
+    progress(`מעלה תמונות ${++n}/${imgs.length}…`);
+    const url=await publishImage(im.canvas);
+    rows[im.at]=`<tr><td style="padding:0;line-height:0;font-size:0"><img src="${url}" alt="${esc(im.alt)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none"></td></tr>`;
+  }
+  return `<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>`+
+    `<body style="margin:0;padding:0;background:#f8fafb"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafb"><tr><td align="center">`+
+    `<table role="presentation" dir="rtl" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#f8fafb">${rows.join("")}</table>`+
+    `</td></tr></table></body></html>`;
+}
+
+/* ---------- Smoove panel ---------- */
+const smSet=(msg,kind="")=>{const s=$("smStatus");s.textContent=msg;s.className="status "+kind;};
+let smSubjectTouched=false;
+function defaultSubject(){
+  if(view==="grid"){ const h=cur().find(b=>b.type==="gheader"); return h? `${h.f.title} · גיליון ${state.banner.issue}` : `גיליון ${state.banner.issue}`; }
+  return `${state.banner.title} · ${pillText(state.banner)}`;
+}
+function smShow(configured, lists){
+  $("smKeyBox").hidden=configured; $("smReady").hidden=!configured;
+  if(!configured) return;
+  if(!smSubjectTouched) $("smSubject").value=defaultSubject();
+  const box=$("smLists"); box.replaceChildren();
+  if(!lists?.length){ const p=document.createElement("p"); p.className="hint"; p.textContent="לא נמצאו רשימות בחשבון."; box.append(p); }
+  for(const l of lists||[]){
+    const lab=document.createElement("label"); lab.className="check"; lab.htmlFor=`sml-${l.id}`;
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.id=`sml-${l.id}`; cb.value=l.id;
+    lab.append(cb, document.createTextNode(` ${l.name}`)); box.append(lab);
+  }
+}
+async function smInit(){
+  try{ const r=await call("api/smoove/status"); smShow(r.configured, r.lists); if(!r.configured) smSet(""); }
+  catch(e){ smShow(true,[]); smSet(e.http? "סמוב לא ענה: "+e.message : "אין כרגע חיבור לשרת.", "err"); }
+}
+$("smSubject").addEventListener("input",()=>{smSubjectTouched=true;});
+$("smConnect").addEventListener("click",async()=>{
+  const key=$("smKey").value.trim(); if(!key){smSet("צריך להדביק מפתח","err");return;}
+  $("smConnect").disabled=true; smSet("בודק את המפתח מול סמוב…");
+  try{ const r=await call("api/smoove/key",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({key})});
+    $("smKey").value=""; smShow(true,r.lists); smSet("מחובר לסמוב","ok"); }
+  catch(e){ smSet(e.http? "סמוב דחה את המפתח: "+e.message : "אין כרגע חיבור לשרת.", "err"); }
+  finally{ $("smConnect").disabled=false; }
+});
+$("smChangeKey").addEventListener("click",()=>{ $("smKeyBox").hidden=false; $("smReady").hidden=true; $("smCancelKey").hidden=false; smSet(""); });
+$("smCancelKey").addEventListener("click",()=>{ $("smCancelKey").hidden=true; smInit(); });
+$("smCreate").addEventListener("click",async()=>{
+  const subject=$("smSubject").value.trim(); if(!subject){smSet("חסר נושא למייל","err");return;}
+  const listIds=[...document.querySelectorAll("#smLists input:checked")].map(c=>Number(c.value));
+  const btn=$("smCreate"); btn.disabled=true;
+  try{
+    const html=await buildEmail(subject, m=>smSet(m));
+    smSet("יוצר את הדיוור בסמוב…");
+    const {id}=await call("api/smoove/campaign",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({subject,html,listIds})});
+    smSet(`הדיוור נוצר בסמוב (מספר ${id}) ושמור שם. נכנסים לסמוב ← דיוורים, בודקים ושולחים.`,"ok");
+  }catch(e){ smSet(e.http? "סמוב לא קיבל את הדיוור: "+e.message : "אין כרגע חיבור לשרת. נסו שוב בעוד דקה.","err"); }
+  finally{ btn.disabled=false; }
+});
+
 /* ---------- persistence (server: /api/upload + /api/state, read back from data/) ---------- */
 async function call(url, opts){
   for(let n=0;;n++){
@@ -756,7 +873,7 @@ function migrate(s){
     const unsaved=b=>(b.src||"").startsWith("pending/")||(b.photo||"").startsWith("pending/");
     for(const k of Object.keys(draft.designs)) if(draft.designs[k].blocks.some(unsaved)) draft.designs[k].blocks=state.designs[k].blocks;
     state=draft; dirty=true; setStatus("נטענה טיוטה שלא נשמרה"); } }catch(e){}
-  fillForm(); setView(view); health();
+  fillForm(); setView(view); health(); smInit();
 })();
 </script>
 </body>
