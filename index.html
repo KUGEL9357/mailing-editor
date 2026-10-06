@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>עורך דיוור AutoSuccess</title>
 <link rel="icon" href="icon.png">
 <link rel="stylesheet" href="fonts/fonts.css">
@@ -18,7 +23,8 @@
   --brand:#5fb1e0; --brand-ink:#0b1a22; --warm:#e9b48f; --danger:#ef7a64; --ok:#5cc28b;
   --paper-shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.35); color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--ui);direction:rtl;padding-inline:16px;padding-block:20px 48px}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--ui);direction:rtl;padding-inline:16px;padding-block:20px 48px}
 .wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 640px;gap:28px;align-items:start}
 @media (max-width:1000px){.wrap{grid-template-columns:minmax(0,1fr)}}
 header.top{max-width:1180px;margin:0 auto 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
@@ -60,6 +66,8 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
 .offline{position:fixed;inset-inline:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--danger);color:#fff;text-align:center;font-weight:600}
 @media (prefers-reduced-motion:no-preference){button{transition:border-color .15s}}
 </style>
+</head>
+<body>
 
 <header class="top">
   <h1>עורך דיוור AutoSuccess<small>באנר עליון, Header ובלוקים לדיוור. כל ייצוא ב-1200px (פי 2 מרוחב 600).</small></h1>
@@ -359,3 +367,5 @@ $("resetColors").addEventListener("click",()=>{Object.assign(state.banner,BRAND)
   $("dlHint").textContent="הקבצים יורדים לתיקיית ההורדות של המחשב.";
 })();
 </script>
+</body>
+</html>
