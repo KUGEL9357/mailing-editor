@@ -239,8 +239,8 @@ function dot(ctx,cx,cy,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.arc(cx*S,c
 function wrapLines(ctx,text,maxW){
   const out=[];
   for(const para of String(text??"").split("\n")){
-    const words=para.split(/\s+/).filter(Boolean); let line="";
-    if(!words.length){out.push("");continue;}
+    if(!para.trim()){out.push("");continue;}
+    const words=para.trim().split(" "); let line="";   // split on single spaces so double spaces survive
     for(const w of words){const t=line?line+" "+w:w; if(line && ctx.measureText(t).width>maxW){out.push(line);line=w;} else line=t;}
     out.push(line);
   }
@@ -264,7 +264,8 @@ function cover(ctx,img,x,y,w,h){
 function curve(ctx,ox,oy,d,color){ // Canva's "signature" stroke, path in its own box at (ox,oy)
   ctx.save(); ctx.translate(ox*S,oy*S); ctx.scale(S,S); ctx.strokeStyle=color; ctx.lineWidth=3; ctx.stroke(new Path2D(d)); ctx.restore();
 }
-const logoBox = (ctx,logo,x,y,w,h) => ctx.drawImage(logo,16,2,256,248,x*S,y*S,w*S,h*S); // logo.png region = the Canva logo frame
+// logo.png region = the Canva logo frame; "multiply" drops the logo's white ground onto any background
+function logoBox(ctx,logo,x,y,w,h){ ctx.save(); ctx.globalCompositeOperation="multiply"; ctx.drawImage(logo,16,2,256,248,x*S,y*S,w*S,h*S); ctx.restore(); }
 
 /* ---------- block renderers: draw at y=0 and return the block height ---------- */
 const R = {
