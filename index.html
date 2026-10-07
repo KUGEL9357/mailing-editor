@@ -172,8 +172,10 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
           <legend style="font-size:13px;color:var(--muted);padding:0 4px">לאילו רשימות (אפשר גם לבחור אחר כך בסמוב)</legend>
           <div id="smLists" style="display:grid;gap:4px;max-height:160px;overflow:auto"></div>
         </fieldset>
+        <p class="hint" id="smLastInfo" hidden></p>
         <div class="actions">
-          <button id="smCreate" class="primary" type="button">צור דיוור בסמוב</button>
+          <button id="smUpdate" class="primary" type="button" hidden>עדכן את הדיוור האחרון</button>
+          <button id="smCreate" type="button">צור דיוור חדש בסמוב</button>
           <button id="smChangeKey" class="small" type="button">החלף מפתח</button>
         </div>
         <p class="hint">נוצר דיוור שמור (לא נשלח). כל הטקסטים והכפתורים נכנסים כטקסט אמיתי; רק לוגו, תמונות וקישוטים הם תמונות (מ-autosuccess.cc), ותמונה שלא השתנתה שומרת על אותה כתובת. בודקים בסמוב ושולחים משם.</p>
@@ -616,6 +618,7 @@ function setView(v){
   $("bannerFields").hidden=!m; $("bannerPreview").hidden=!m; $("dlBanner").hidden=!m; $("pillWrap").hidden=!m;
   openSet.clear(); fillAddTypes(); render();
   if(!smSubjectTouched && !$("smReady").hidden) $("smSubject").value=defaultSubject();
+  smShowLast();
 }
 document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
 
@@ -846,7 +849,13 @@ async function buildEmail(subject, progress){
 
 /* ---------- Smoove panel ---------- */
 const smSet=(msg,kind="")=>{const s=$("smStatus");s.textContent=msg;s.className="status "+kind;};
-let smSubjectTouched=false;
+let smSubjectTouched=false, smLast={};
+function smShowLast(){
+  const l=smLast[view], info=$("smLastInfo");
+  $("smUpdate").hidden=!l; info.hidden=!l;
+  $("smCreate").classList.toggle("primary",!l);
+  if(l) info.textContent=`הדיוור האחרון מהלשונית הזו: מספר ${l.id} · "${l.subject}" (${new Date(l.at).toLocaleString("he-IL",{dateStyle:"short",timeStyle:"short"})}). "עדכן" יוצר גרסה חדשה ומוחק אותו, אם הוא עוד לא נשלח.`;
+}
 function defaultSubject(){
   if(view==="grid"){ const h=cur().find(b=>b.type==="gheader"); return h? `${h.f.title} · גיליון ${state.banner.issue}` : `גיליון ${state.banner.issue}`; }
   return `${state.banner.title} · ${pillText(state.banner)}`;
@@ -864,7 +873,7 @@ function smShow(configured, lists){
   }
 }
 async function smInit(){
-  try{ const r=await call("api/smoove/status"); smShow(r.configured, r.lists); if(!r.configured) smSet(""); }
+  try{ const r=await call("api/smoove/status"); smLast=r.last||{}; smShow(r.configured, r.lists); smShowLast(); if(!r.configured) smSet(""); }
   catch(e){ smShow(true,[]); smSet(e.http? "סמוב לא ענה: "+e.message : "אין כרגע חיבור לשרת.", "err"); }
 }
 $("smSubject").addEventListener("input",()=>{smSubjectTouched=true;});
@@ -878,18 +887,23 @@ $("smConnect").addEventListener("click",async()=>{
 });
 $("smChangeKey").addEventListener("click",()=>{ $("smKeyBox").hidden=false; $("smReady").hidden=true; $("smCancelKey").hidden=false; smSet(""); });
 $("smCancelKey").addEventListener("click",()=>{ $("smCancelKey").hidden=true; smInit(); });
-$("smCreate").addEventListener("click",async()=>{
+async function smSend(replace){
   const subject=$("smSubject").value.trim(); if(!subject){smSet("חסר נושא למייל","err");return;}
   const listIds=[...document.querySelectorAll("#smLists input:checked")].map(c=>Number(c.value));
-  const btn=$("smCreate"); btn.disabled=true;
+  const btns=[$("smCreate"),$("smUpdate")]; btns.forEach(b=>b.disabled=true);
   try{
     const html=await buildEmail(subject, m=>smSet(m));
-    smSet("יוצר את הדיוור בסמוב…");
-    const {id}=await call("api/smoove/campaign",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({subject,html,listIds})});
-    smSet(`הדיוור נוצר בסמוב (מספר ${id}) ושמור שם. נכנסים לסמוב ← דיוורים, בודקים ושולחים.`,"ok");
+    smSet(replace? "מעדכן את הדיוור בסמוב…" : "יוצר את הדיוור בסמוב…");
+    const r=await call("api/smoove/campaign",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({subject,html,listIds,design:view,replace})});
+    smLast=r.last||smLast; smShowLast();
+    const after={ deleted:` הדיוור הקודם (${r.previousId}) נמחק.`, gone:` הדיוור הקודם (${r.previousId}) כבר לא היה בסמוב.`,
+                  kept:` הדיוור הקודם (${r.previousId}) לא נמחק, כי הוא נשלח או שלא היה אפשר לוודא שלא נשלח. אם צריך, מוחקים אותו בסמוב.` }[r.replaced] || "";
+    smSet(`הדיוור נוצר בסמוב (מספר ${r.id}) ושמור שם.${after} נכנסים לסמוב ← דיוורים, בודקים ושולחים.`, r.replaced==="kept"?"err":"ok");
   }catch(e){ smSet(e.http? "סמוב לא קיבל את הדיוור: "+e.message : "אין כרגע חיבור לשרת. נסו שוב בעוד דקה.","err"); }
-  finally{ btn.disabled=false; }
-});
+  finally{ btns.forEach(b=>b.disabled=false); }
+}
+$("smCreate").addEventListener("click",()=>smSend(false));
+$("smUpdate").addEventListener("click",()=>smSend(true));
 
 /* ---------- persistence (server: /api/upload + /api/state, read back from data/) ---------- */
 async function call(url, opts){
