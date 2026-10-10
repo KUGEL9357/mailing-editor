@@ -235,7 +235,7 @@ const TYPES = {
              defaults:{caption:"לפני שבונים אוטומציה, ממפים את התהליך הקיים."}, photoSrc:"assets/photos/main.png"},
   steps:    {label:"3 שלבים", fields:[["title","כותרת"],["s1","שלב 1"],["d1","תיאור שלב 1"],["s2","שלב 2"],["d2","תיאור שלב 2"],["s3","שלב 3"],["d3","תיאור שלב 3"]],
              defaults:{title:"אז מאיפה מתחילים?", s1:"עוצרים", d1:"מה קורה היום בפועל?", s2:"ממפים", d2:"איפה הזמן הולך לאיבוד?", s3:"מזהים", d3:"מה באמת שווה לאוטמט?"}},
-  insight:  {label:"תובנה", fields:[["label","תווית קטנה"],["title","כותרת"],["text","טקסט",1]],
+  insight:  {label:"תובנה", cardPhoto:true, fields:[["label","תווית קטנה"],["title","כותרת"],["text","טקסט",1]],
              defaults:{label:"INSIGHT 01", title:"התובנה של השבוע", text:"לא כל דבר שיכול להיות אוטומטי — צריך להיות אוטומטי.\nהערך נמצא במקום שבו האוטומציה באמת פותרת בעיה."}},
   cta:      {label:"CTA (כפתור)", fields:[["title","כותרת"],["button","טקסט הכפתור"],["link","קישור הכפתור (לאן הוא מוביל במייל)"]],
              defaults:{title:"בואו נעשה סדר בתהליך שלכם", button:"רוצים לבדוק איפה אפשר לייעל? ←", link:"https://autosuccess.cc"}},
@@ -255,7 +255,7 @@ Object.assign(TYPES,{
             defaults:{title:"דקה של סדר", subtitle:"גיליון {גיליון} | אוטומציה שמרוויחה לך כסף"}},
   gpara:   {design:"grid", label:"פסקה", fields:[["text","טקסט",1]], defaults:{text:"שלום לך,\nכותבים כאן את הפסקה."}},
   gtip:    {design:"grid", label:"כרטיס טיפ", cardPhoto:true, fields:[["num","מספר"],["tag","תגית"],["title","כותרת",1]], defaults:{num:"01", tag:"טיפ", title:"כותרת הטיפ כאן"}},
-  gtool:   {design:"grid", label:"כרטיס כלי", photo:true, photoLabel:"לוגו הכלי", fields:[["tag","תגית"],["title","שם הכלי",1],["logoText","טקסט במקום לוגו (כשאין תמונה)"]],
+  gtool:   {design:"grid", label:"כרטיס כלי", photo:true, cardPhoto:true, photoLabel:"לוגו הכלי", fields:[["tag","תגית"],["title","שם הכלי",1],["logoText","טקסט במקום לוגו (כשאין תמונה)"]],
             defaults:{tag:"כלי מומלץ", title:"שם הכלי כאן", logoText:"לוגו הכלי"}},
   gstory:  {design:"grid", label:"כרטיס מהשטח", cardPhoto:true, fields:[["tag","תגית"],["title","כותרת",1]], defaults:{tag:"מהשטח", title:"כותרת הסיפור כאן"}},
   gdivider:{design:"grid", label:"מפריד", fields:[]},
@@ -381,23 +381,32 @@ function wave(ctx,ox,oy,scale,d,width,color,alpha){
   ctx.save(); ctx.globalAlpha=alpha; ctx.translate(ox*S,oy*S); ctx.scale(S*scale,S*scale);
   ctx.strokeStyle=color; ctx.lineWidth=width; ctx.stroke(new Path2D(d)); ctx.restore();
 }
+/* optional photo inside a card (blk.cphoto): "side" = left of the text (default), "below" = across the card under the text.
+   Heights keep the photo's own proportions, within limits. */
+const belowH = (img,w) => img ? Math.round(Math.min(360, w*img.naturalHeight/img.naturalWidth)) : 0;
+const sideH  = (img,w) => img ? Math.round(Math.max(90, Math.min(220, w*img.naturalHeight/img.naturalWidth))) : 0;
+const cardPos = blk => blk?.cpos==="below" ? "below" : "side";
+function roundPhoto(ctx,img,x,y,w,h){ ctx.save(); ctx.beginPath(); ctx.roundRect(x*S,y*S,w*S,h*S,10*S); ctx.clip(); cover(ctx,img,x,y,w,h); ctx.restore(); }
 // grid cards: 560-wide card, tag pill top-right of the text column, title under it; the card grows with the title.
-// An optional photo sits under that row across the card (520 wide, own aspect up to 360 high): H = top row, T = whole card.
-const cardPhotoH = img => img ? Math.round(Math.min(360, 520*img.naturalHeight/img.naturalWidth)) : 0;
-function gcard(ctx,f,fill,stroke,photo){
-  const th=text(document.createElement("canvas").getContext("2d"),{t:f.title,x:65,y:0,w:400,size:26,weight:700});
-  const H=Math.max(110, 60+Math.max(th,30.8)+19.2), ph=cardPhotoH(photo), T=H+(ph?ph+20:0);
+// H = the top row (number/logo + text, and a side photo), T = the whole card; dy centres the text when a side photo is taller.
+const GSIDE=160;
+function gcard(ctx,f,fill,stroke,photo,pos){
+  const side=photo&&pos==="side", tx=side?215:65, tw=side?250:400;
+  const th=text(document.createElement("canvas").getContext("2d"),{t:f.title,x:tx,y:0,w:tw,size:26,weight:700});
+  const H0=Math.max(110, 60+Math.max(th,30.8)+19.2), sh=side?sideH(photo,GSIDE):0, H=Math.max(H0, sh+40), dy=(H-H0)/2;
+  const ph=side?0:belowH(photo,520), T=H+(ph?ph+20:0);
   rect(ctx,20,10,560,T,14,fill);
   if(stroke){ ctx.save(); ctx.strokeStyle=stroke; ctx.lineWidth=2*S; ctx.beginPath(); ctx.roundRect(21*S,11*S,558*S,(T-2)*S,13*S); ctx.stroke(); ctx.restore(); }
-  text(ctx,{t:f.title,x:65,y:60,w:400,size:26,weight:700,color:state.banner.ink});
-  if(ph){ ctx.save(); ctx.beginPath(); ctx.roundRect(40*S,(10+H)*S,520*S,ph*S,10*S); ctx.clip(); cover(ctx,photo,40,10+H,520,ph); ctx.restore(); }
-  return {H,T};
+  text(ctx,{t:f.title,x:tx,y:60+dy,w:tw,size:26,weight:700,color:state.banner.ink});
+  if(sh) roundPhoto(ctx,photo,40,10+(H-sh)/2,GSIDE,sh);
+  if(ph) roundPhoto(ctx,photo,40,10+H,520,ph);
+  return {H,T,dy};
 }
-function pill(ctx,label,fill,color){
+function pill(ctx,label,fill,color,dy=0){
   if(!String(label??"").trim()) return;
   ctx.font=tFontCss(label,700,13); const w=Math.max(60,ctx.measureText(label).width/S+28), h=Math.max(23,tSize(label,13)*1.16+8);
-  rect(ctx,465-w,31,w,h,h/2,fill);
-  text(ctx,{t:label,x:465-w,y:31+(h-tSize(label,13)*1.16)/2,w,size:13,weight:700,color,align:"center"});
+  rect(ctx,465-w,31+dy,w,h,h/2,fill);
+  text(ctx,{t:label,x:465-w,y:31+dy+(h-tSize(label,13)*1.16)/2,w,size:13,weight:700,color,align:"center"});
 }
 
 /* ---------- block renderers: draw at y=0 and return the block height ---------- */
@@ -459,18 +468,23 @@ const R = {
     });
     return tops.length? tops.at(-1)+61 : y+16;
   },
-  async insight(ctx,f){
+  async insight(ctx,f,blk){
     const b=state.banner, off=document.createElement("canvas").getContext("2d");
+    const photo=blk.cphoto? await loadImg(blk.cphoto).catch(()=>null) : null, side=photo&&cardPos(blk)==="side";
+    const tx=side?244:48, tw=side?308:504, sh=side?sideH(photo,180):0, ph=photo&&!side?belowH(photo,504):0;
     let y=39; const parts=[];
-    const hl=text(off,{t:f.label,x:48,y:0,w:504,size:13,weight:700}); if(hl){parts.push(["label",y]); y+=hl+6.7;}
-    const ht=text(off,{t:f.title,x:48,y:0,w:504,size:25,weight:700}); if(ht){parts.push(["title",y]); y+=ht+12.5;}
-    const hx=text(off,{t:f.text,x:48,y:0,w:504,size:17,lh:1.45}); if(hx){parts.push(["text",y]); y+=hx;}
-    const H=Math.max(200, y-17+71.7);
+    const hl=text(off,{t:f.label,x:tx,y:0,w:tw,size:13,weight:700}); if(hl){parts.push(["label",y]); y+=hl+6.7;}
+    const ht=text(off,{t:f.title,x:tx,y:0,w:tw,size:25,weight:700}); if(ht){parts.push(["title",y]); y+=ht+12.5;}
+    const hx=text(off,{t:f.text,x:tx,y:0,w:tw,size:17,lh:1.45}); if(hx){parts.push(["text",y]); y+=hx;}
+    if(ph){ y+=16; parts.push(["photo",y]); y+=ph; }
+    const H=Math.max(200, y-17+71.7, sh?22+sh+71.7:0);
     rect(ctx,24,17,552,H,20,b.soft);
+    if(sh) roundPhoto(ctx,photo,48,39,180,sh);
     for(const [k,py] of parts){
-      if(k==="label") text(ctx,{t:f.label,x:48,y:py,w:504,size:13,weight:700,color:b.brand});
-      if(k==="title") text(ctx,{t:f.title,x:48,y:py,w:504,size:25,weight:700,color:b.ink});
-      if(k==="text")  text(ctx,{t:f.text,x:48,y:py,w:504,size:17,color:b.ink,lh:1.45});
+      if(k==="label") text(ctx,{t:f.label,x:tx,y:py,w:tw,size:13,weight:700,color:b.brand});
+      if(k==="title") text(ctx,{t:f.title,x:tx,y:py,w:tw,size:25,weight:700,color:b.ink});
+      if(k==="text")  text(ctx,{t:f.text,x:tx,y:py,w:tw,size:17,color:b.ink,lh:1.45});
+      if(k==="photo") roundPhoto(ctx,photo,48,py,504,ph);
     }
     if(b.decor){ const cy=17+H-48; curve(ctx,48,cy,"M0,2 H82 A16,16 0 0 1 98,18",b.brand); dot(ctx,146,cy+18,7,b.brand); }
     return 17+H+17;
@@ -526,27 +540,28 @@ const R = {
     return 20+h+20;
   },
   async gtip(ctx,f,blk){
-    const b=state.banner, photo=blk.photo? await loadImg(blk.photo).catch(()=>null) : null;
-    const {H,T}=gcard(ctx,f,b.soft,null,photo);
-    pill(ctx,f.tag,b.ink,"#ffffff");
+    const b=state.banner, photo=blk.cphoto? await loadImg(blk.cphoto).catch(()=>null) : null;
+    const {H,T,dy}=gcard(ctx,f,b.soft,null,photo,cardPos(blk));
+    pill(ctx,f.tag,b.ink,"#ffffff",dy);
     text(ctx,{t:f.num,x:475,y:10+H/2-36,w:85,size:60,weight:700,color:b.brand,align:"center",lh:1.2});
     return 10+T+10;
   },
   async gtool(ctx,f,blk){
     const b=state.banner, logo=blk.photo? await loadImg(blk.photo).catch(()=>null) : null;
-    const {H}=gcard(ctx,f,b.soft,null);
-    pill(ctx,f.tag,"#ffffff",b.ink);
+    const photo=blk.cphoto? await loadImg(blk.cphoto).catch(()=>null) : null;
+    const {H,T,dy}=gcard(ctx,f,b.soft,null,photo,cardPos(blk));
+    pill(ctx,f.tag,"#ffffff",b.ink,dy);
     const top=10+H/2-37.5;
     rect(ctx,480,top,75,75,14,"#ffffff");
     if(logo){ const r=Math.min(61/logo.naturalWidth,61/logo.naturalHeight), w=logo.naturalWidth*r, h=logo.naturalHeight*r;
       ctx.drawImage(logo,(517.5-w/2)*S,(top+37.5-h/2)*S,w*S,h*S); }
     else text(ctx,{t:f.logoText,x:480,y:top+29,w:75,size:11,color:"#9ca3af",align:"center"});
-    return 10+H+10;
+    return 10+T+10;
   },
   async gstory(ctx,f,blk){
-    const b=state.banner, photo=blk.photo? await loadImg(blk.photo).catch(()=>null) : null;
-    const {H,T}=gcard(ctx,f,"#ffffff",b.brand,photo);
-    pill(ctx,f.tag,b.pill,b.ink);
+    const b=state.banner, photo=blk.cphoto? await loadImg(blk.cphoto).catch(()=>null) : null;
+    const {H,T,dy}=gcard(ctx,f,"#ffffff",b.brand,photo,cardPos(blk));
+    pill(ctx,f.tag,b.pill,b.ink,dy);
     text(ctx,{t:"”",x:480,y:10+H/2-45,w:75,size:110,weight:700,color:b.brand,align:"center",lh:1});
     return 10+T+10;
   },
@@ -693,14 +708,21 @@ function renderList(){
       if(key!=="link") body.append(styleRow(blk,key,label,el));
     }
     if(blk.type==="header"){const p=document.createElement("p");p.className="hint";p.textContent="המספר והתאריך נלקחים מהבאנר העליון.";body.append(p);}
+    if(T.cardPhoto && blk.cphoto){
+      const l=document.createElement("label"); l.htmlFor=`b${i}-cpos`; l.textContent="מיקום התמונה בכרטיס";
+      const sel=document.createElement("select"); sel.id=`b${i}-cpos`;
+      sel.append(new Option("בצד הכיתוב","side"), new Option("מתחת לכיתוב, לכל הרוחב","below")); sel.value=cardPos(blk);
+      sel.addEventListener("change",()=>{ if(sel.value==="below") blk.cpos="below"; else delete blk.cpos; markDirty(); schedule(); });
+      l.append(sel); body.append(l);
+    }
 
     const btns=document.createElement("div"); btns.className="btns";
     const mk=(txt,fn,cls="")=>{const bt=document.createElement("button");bt.type="button";bt.className="small "+cls;bt.textContent=txt;bt.addEventListener("click",fn);btns.append(bt);return bt;};
     mk("↑ למעלה",()=>move(i,-1)).disabled=i===0;
     mk("↓ למטה",()=>move(i,1)).disabled=i===cur().length-1;
     if(T.photo) mk(T.photoLabel?"העלה "+T.photoLabel:"החלף תמונה",()=>pickFile(f=>{blk.photo=stashUpload(f);markDirty();schedule();}));
-    if(T.cardPhoto){ mk(blk.photo?"החלף תמונה בכרטיס":"הוסף תמונה לכרטיס",()=>pickFile(f=>{blk.photo=stashUpload(f);markDirty();render();}));
-      if(blk.photo) mk("הסר תמונה",()=>{delete blk.photo;markDirty();render();}); }
+    if(T.cardPhoto){ mk(blk.cphoto?"החלף תמונה בכרטיס":"הוסף תמונה לכרטיס",()=>pickFile(f=>{blk.cphoto=stashUpload(f);markDirty();render();}));
+      if(blk.cphoto) mk("הסר תמונה מהכרטיס",()=>{delete blk.cphoto;delete blk.cpos;markDirty();render();}); }
     if(blk.type==="upload") mk("החלף תמונה",()=>pickFile(f=>{blk.src=stashUpload(f);markDirty();schedule();}));
     if(T.defaults) mk("החזר טקסט מקורי",()=>{blk.f={...T.defaults};delete blk.st;markDirty();render();});
     mk("שכפל",()=>{cur().splice(i+1,0,structuredClone(blk));shiftOpen(i+1,1);markDirty();render();});
@@ -828,12 +850,15 @@ const button = (text,link,size) => { const b=state.banner;
   return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td align="center" bgcolor="${b.brand}" style="border-radius:28px;background:${b.brand}">`+
     `<a href="${esc(safeUrl(link))}" target="_blank" style="display:inline-block;padding:16px 36px;font-family:${FONT(text)};font-size:${tSize(text,size)}px;font-weight:bold;line-height:1.3;color:#ffffff;text-decoration:none;border-radius:28px">${esc(text)}</a></td></tr></table>`; };
 
-// the optional photo inside a grid card, under its title row
-async function cardPhoto(blk,f){
-  if(!blk?.photo) return "";
-  const ph=cardPhotoH(await loadImg(blk.photo).catch(()=>null)); if(!ph) return "";
-  return `<div style="margin-top:18px">${img(await photoArt(blk.photo,520,ph),520,ph,f.title,"border-radius:10px")}</div>`;
+// the optional photo inside a card: a cell to the left of the text ("side"), or a row under it ("below", w = card's inner width)
+async function cardImg(blk,f,side,w){
+  if(!blk?.cphoto || (cardPos(blk)==="side")!==side) return null;
+  const l=await loadImg(blk.cphoto).catch(()=>null); if(!l) return null;
+  const h=side? sideH(l,w) : belowH(l,w);
+  return img(await photoArt(blk.cphoto,w,h),w,h,f.title,"border-radius:10px");
 }
+const sideCells = async (blk,f,w) => { const i=await cardImg(blk,f,true,w); return i? [["","width:16px"],[i,`width:${w}px;vertical-align:middle`]] : []; };
+const belowRow = async (blk,f,w) => { const i=await cardImg(blk,f,false,w); return i? `<div style="margin-top:18px">${i}</div>` : ""; };
 const MAIL = {
   async banner(){
     const b=styled(state.banner,state.banner.st), bg=document.createElement("canvas"); bg.width=1200; bg.height=400; await drawBanner(bg,{bare:true});
@@ -861,9 +886,12 @@ const MAIL = {
     return tr(P(f.title,{size:26,weight:700,lh:1.4})+items.map(([s,d],i)=>`<div style="margin-top:${i?20:14}px">`+cols([
       [`<div style="width:40px;height:40px;line-height:40px;border-radius:20px;background:${b.brand};color:#ffffff;font-family:${FONT()};font-size:18px;font-weight:bold;text-align:center">${i+1}</div>`,"width:40px;vertical-align:top"],
       ["","width:16px"],[P(s,{size:20,weight:700,lh:1.4})+P(d,{size:16,lh:1.4}),"vertical-align:top"]])+`</div>`).join(""),"20px 24px 16px"); },
-  async insight(f){ const b=state.banner;
+  async insight(f,blk){ const b=state.banner;
     const deco = b.decor ? `<div style="text-align:left;margin-top:16px">${img(await art(108,28,ctx=>{ curve(ctx,1,1,"M0,2 H82 A16,16 0 0 1 98,18",b.brand); dot(ctx,99,19,7,b.brand); }),108,28,"","display:inline-block")}</div>` : "";
-    return tr(card(P(f.label,{size:13,weight:700,color:b.brand})+P(f.title,{size:25,weight:700,lh:1.4,mt:4})+P(f.text,{size:17,lh:1.45,mt:8})+deco,{bg:b.soft,radius:20,pad:"22px 24px 20px"}),"17px 24px"); },
+    const words=P(f.label,{size:13,weight:700,color:b.brand})+P(f.title,{size:25,weight:700,lh:1.4,mt:4})+P(f.text,{size:17,lh:1.45,mt:8});
+    const side=await sideCells(blk,f,180);
+    const inner = side.length ? cols([[words,"vertical-align:top"],...side.map(([h,st])=>[h,st.replace("middle","top")])])+deco : words+await belowRow(blk,f,504)+deco;
+    return tr(card(inner,{bg:b.soft,radius:20,pad:"22px 24px 20px"}),"17px 24px"); },
   async cta(f){ return tr(P(f.title,{size:22,weight:700,lh:1.4,align:"center"})+`<div style="margin-top:14px">${button(f.button,f.link,18)}</div>`,"17px 24px 19px","text-align:center;"); },
   async closing(f){ return tr(P(f.text,{size:18}),"19px 24px 21px"); },
   async signature(f){ return tr(P(f.text,{size:18,weight:700,lh:1.4,color:state.banner.brand}),"22px 24px 28px"); },
@@ -880,17 +908,17 @@ const MAIL = {
   async gpara(f){ return tr(P(f.text,{size:16,lh:1.6}),"20px 40px"); },
   async gtip(f,blk){ const b=state.banner;
     return tr(card(cols([[P(f.num,{size:60,weight:700,lh:1,color:b.brand,align:"center"}),"width:85px;vertical-align:middle"],["","width:10px"],
-      [pillH(f.tag,b.ink,"#ffffff")+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"]])+await cardPhoto(blk,f),{bg:b.soft,radius:14,pad:"22px 20px"}),"10px 20px"); },
+      [pillH(f.tag,b.ink,"#ffffff")+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"],...await sideCells(blk,f,GSIDE)])+await belowRow(blk,f,520),{bg:b.soft,radius:14,pad:"22px 20px"}),"10px 20px"); },
   async gtool(f,blk){ const b=state.banner;
     let logo;
     if(blk.photo){ const l=await loadImg(blk.photo); logo=img(await art(75,75,ctx=>{ rect(ctx,0,0,75,75,14,"#ffffff");
         const r=Math.min(61/l.naturalWidth,61/l.naturalHeight), w=l.naturalWidth*r, h=l.naturalHeight*r; ctx.drawImage(l,(37.5-w/2)*S,(37.5-h/2)*S,w*S,h*S); }),75,75,f.title); }
     else logo=`<div style="width:75px;height:75px;line-height:75px;border-radius:14px;background:#ffffff;color:#9ca3af;font-family:${FONT(f.logoText)};font-size:${tSize(f.logoText,11)}px;text-align:center">${esc(f.logoText)}</div>`;
     return tr(card(cols([[logo,"width:75px;vertical-align:middle"],["","width:15px"],
-      [pillH(f.tag,"#ffffff",b.ink)+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"]]),{bg:b.soft,radius:14,pad:"22px 20px"}),"10px 20px"); },
+      [pillH(f.tag,"#ffffff",b.ink)+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"],...await sideCells(blk,f,GSIDE)])+await belowRow(blk,f,520),{bg:b.soft,radius:14,pad:"22px 20px"}),"10px 20px"); },
   async gstory(f,blk){ const b=state.banner;
     return tr(card(cols([[P("”",{size:110,weight:700,lh:0.75,color:b.brand,align:"center",extra:"height:60px;overflow:hidden"}),"width:75px;vertical-align:middle"],["","width:15px"],
-      [pillH(f.tag,b.pill,b.ink)+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"]])+await cardPhoto(blk,f),
+      [pillH(f.tag,b.pill,b.ink)+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"],...await sideCells(blk,f,GSIDE)])+await belowRow(blk,f,520),
       {bg:"#ffffff",radius:14,pad:"20px 18px",border:`border:2px solid ${b.brand};`}),"10px 20px"); },
   async gdivider(){ const c=await renderBlock({type:"gdivider",f:{}}); pubProgress(`מעלה תמונות (${++pubCount})…`);
     return tr(img(await publishImage(c),600,75,"")); },
@@ -1019,7 +1047,7 @@ $("saveBtn").addEventListener("click",async()=>{
       const f=pending[p];
       const {path}=await call("api/upload",{method:"POST",headers:{"content-type":f.type||"image/png"},body:f});
       localUrls[path]=localUrls[p];
-      allBlocks().forEach(b=>{if(b.src===p) b.src=path; if(b.photo===p) b.photo=path;});
+      allBlocks().forEach(b=>{if(b.src===p) b.src=path; if(b.photo===p) b.photo=path; if(b.cphoto===p) b.cphoto=path;});
       delete pending[p];
     }
     await call("api/state",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify(state)});
@@ -1062,6 +1090,7 @@ const LEGACY = {"01":"header","02":"hero","03":"text","04":"image","05":"steps",
 const allBlocks = () => Object.values(state.designs).flatMap(d=>d.blocks);
 function fixBlocks(list){
   return (list||[]).map(b=>{
+    if((b.type==="gtip"||b.type==="gstory") && b.photo && !b.cphoto){ b={...b, cphoto:b.photo, cpos:"below"}; delete b.photo; }
     if(b.type && TYPES[b.type]) return {...b, f:{...(TYPES[b.type].defaults||{}),...(b.f||{})}};
     const m=/^blocks\/(\d\d)-/.exec(b.src||"");
     if(m && LEGACY[m[1]]) return newBlock(LEGACY[m[1]]);
@@ -1082,7 +1111,7 @@ function migrate(s){
   state=migrate(state);
   try{ const d=localStorage.getItem("draft"); if(d){ const draft=migrate(JSON.parse(d));
     // a draft can point at uploads that were never saved; keep the saved block list in that case
-    const unsaved=b=>(b.src||"").startsWith("pending/")||(b.photo||"").startsWith("pending/");
+    const unsaved=b=>[b.src,b.photo,b.cphoto].some(v=>(v||"").startsWith("pending/"));
     for(const k of Object.keys(draft.designs)) if(draft.designs[k].blocks.some(unsaved)) draft.designs[k].blocks=state.designs[k].blocks;
     state=draft; dirty=true; setStatus("נטענה טיוטה שלא נשמרה"); } }catch(e){}
   fillForm(); bannerStyleRows(); setView(view); health(); smInit();
