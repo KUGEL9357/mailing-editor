@@ -126,7 +126,7 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
 
     <div class="panel">
       <h2>בלוקים בדיוור</h2>
-      <p class="hint">פותחים בלוק כדי לערוך את הטקסטים שלו. אפשר גם ללחוץ על בלוק בתצוגה המקדימה. ירידת שורה בטקסט: Enter.</p>
+      <p class="hint">פותחים בלוק כדי לערוך את הטקסטים שלו. אפשר גם ללחוץ על בלוק בתצוגה המקדימה. ירידת שורה בטקסט: Enter. "+ שדה דינמי" מכניס למשל [[שם פרטי]], וסמוב מחליף אותו בשם של כל נמען.</p>
       <ol class="blocks" id="blockList"></ol>
       <div class="actions">
         <label for="addType" style="display:flex;gap:8px;align-items:center">הוסף בלוק
@@ -682,7 +682,7 @@ function renderList(){
       el.id=`b${i}-${key}`; el.value=blk.f[key]??""; el.autocomplete="off"; if(multi) el.rows=3;
       el.addEventListener("input",()=>{blk.f[key]=el.value; markDirty(); schedule();});
       l.append(el); body.append(l);
-      if(key!=="link") body.append(styleRow(blk,key,label));
+      if(key!=="link") body.append(styleRow(blk,key,label,el));
     }
     if(blk.type==="header"){const p=document.createElement("p");p.className="hint";p.textContent="המספר והתאריך נלקחים מהבאנר העליון.";body.append(p);}
 
@@ -700,9 +700,20 @@ function renderList(){
     det.append(sum,body); li.append(det); ol.append(li);
   });
 }
+// Smoove personalization: "[[שם פרטי]]" in the email is replaced per recipient (format as Smoove's own editor inserts it)
+const MERGE=["שם פרטי","שם משפחה","מייל","נייד","טלפון קווי","כתובת","עיר","ארץ","תאריך לידה","שם חברה","תפקיד"];
+function mergePicker(el,label){
+  const sel=document.createElement("select"); sel.setAttribute("aria-label",`שדה דינמי: ${label}`);
+  sel.append(new Option("+ שדה דינמי",""), ...MERGE.map(m=>new Option(m,m)));
+  sel.addEventListener("change",()=>{ if(!sel.value) return;
+    const tag=`[[${sel.value}]]`, a=el.selectionStart??el.value.length, z=el.selectionEnd??a;
+    el.value=el.value.slice(0,a)+tag+el.value.slice(z); sel.value="";
+    el.focus(); el.setSelectionRange(a+tag.length,a+tag.length); el.dispatchEvent(new Event("input")); });
+  return sel;
+}
 // font + size pickers for one text; owner.st[key] holds only what differs from the design
 const SIZES=[60,70,80,90,100,110,120,130,140,150,175,200];
-function styleRow(owner,key,label){
+function styleRow(owner,key,label,el){
   const row=document.createElement("div"); row.className="style-row";
   const s=owner.st?.[key]||{};
   const font=document.createElement("select"); font.setAttribute("aria-label",`פונט: ${label}`);
@@ -714,7 +725,7 @@ function styleRow(owner,key,label){
     if(!Object.keys(owner.st).length) delete owner.st;
     markDirty(); schedule(); };
   font.addEventListener("change",set); size.addEventListener("change",set);
-  row.append(font,size); return row;
+  row.append(font,size); if(el) row.append(mergePicker(el,label)); return row;
 }
 function shiftOpen(from,d){ const s=[...openSet].map(k=>k>=from?k+d:k).filter(k=>k>=0); openSet.clear(); s.forEach(k=>openSet.add(k)); if(d>0) openSet.add(from); }
 function move(i,d){
@@ -925,6 +936,7 @@ async function smInit(){
   catch(e){ smShow(true,[]); smSet(e.http? "סמוב לא ענה: "+e.message : "אין כרגע חיבור לשרת.", "err"); }
 }
 $("smSubject").addEventListener("input",()=>{smSubjectTouched=true;});
+{ const r=document.createElement("div"); r.className="style-row"; r.append(mergePicker($("smSubject"),"נושא המייל")); $("smSubject").closest("label").after(r); }
 const smLoginShow = email => { $("smLoginState").textContent = email? "מחובר כ-"+email : "לא מחובר"; if(email) $("smLoginEmail").value=email; };
 $("smLoginSave").addEventListener("click",async()=>{
   const email=$("smLoginEmail").value.trim(), password=$("smLoginPass").value;
@@ -1013,7 +1025,7 @@ for(const f of FIELDS){
 function bannerStyleRows(){
   for(const [key,label] of [["title","כותרת הבאנר"],["slogan","סלוגן"]]){
     const host=$(key).closest("label"); host.nextElementSibling?.classList.contains("style-row") && host.nextElementSibling.remove();
-    host.after(styleRow(state.banner,key,label));
+    host.after(styleRow(state.banner,key,label,$(key)));
   }
 }
 $("resetColors").addEventListener("click",()=>{Object.assign(state.banner,BRAND);fillForm();markDirty();schedule();});
