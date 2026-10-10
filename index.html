@@ -180,6 +180,11 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
           <button id="smCreate" type="button">צור דיוור חדש בסמוב</button>
           <button id="smChangeKey" class="small" type="button">החלף מפתח</button>
         </div>
+        <div id="smCodeBox" hidden style="display:grid;gap:8px;border:1px solid var(--brand);border-radius:8px;padding:10px 12px">
+          <p class="hint" style="color:var(--fg)">סמוב שלח קוד אימות (6 ספרות) למייל של המשתמש הנוסף. מקלידים אותו כאן, ואז לוחצים שוב על יצירת הדיוור.</p>
+          <label for="smCode">קוד מסמוב<input id="smCode" type="text" inputmode="numeric" autocomplete="one-time-code" dir="ltr"></label>
+          <div class="actions"><button id="smCodeSend" class="primary small" type="button">אשר קוד</button></div>
+        </div>
         <details id="smLoginBox" style="border:1px solid var(--line);border-radius:8px;padding:8px 12px">
           <summary style="cursor:pointer;font-size:13px;font-weight:600">תמונות דרך סמוב (בשביל נטפרי): <span id="smLoginState">לא מחובר</span></summary>
           <div style="display:grid;gap:10px;margin-top:10px">
@@ -189,7 +194,7 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
             <div class="actions"><button id="smLoginSave" class="small" type="button">שמור</button></div>
           </div>
         </details>
-        <p class="hint">נוצר דיוור שמור (לא נשלח). כל הטקסטים והכפתורים נכנסים כטקסט אמיתי; רק לוגו, תמונות וקישוטים הם תמונות (מ-autosuccess.cc), ותמונה שלא השתנתה שומרת על אותה כתובת. בודקים בסמוב ושולחים משם.</p>
+        <p class="hint">נוצר דיוור שמור (לא נשלח). כל הטקסטים והכפתורים נכנסים כטקסט אמיתי; רק לוגו, תמונות וקישוטים הם תמונות. הן עולות לשרת התמונות של סמוב (כמו העלאה ידנית, ונטפרי מאשר אותן מהר), ותמונה שכבר עלתה לא עולה שוב. תמונה חדשה בפעם הראשונה יכולה לקחת דקה. בודקים בסמוב ושולחים משם.</p>
       </div>
       <p class="status" id="smStatus" role="status"></p>
     </div>
@@ -787,10 +792,11 @@ const safeUrl = u => /^(https?:\/\/|mailto:)/i.test(String(u||"").trim()) ? Stri
 
 async function canvasBlob(c){ return new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/png")); }
 async function publishImage(c){
-  const {url}=await call("api/smoove/image",{method:"POST",headers:{"content-type":"image/png"},body:await canvasBlob(c)});
+  const {url,host}=await call("api/smoove/image",{method:"POST",headers:{"content-type":"image/png"},body:await canvasBlob(c)});
+  if(host!=="smoove") pubOnSite++;     // fell back to autosuccess.cc: NetFree may hold it
   return url;
 }
-let pubCount=0, pubProgress=()=>{};
+let pubCount=0, pubOnSite=0, pubProgress=()=>{};
 async function art(w,h,draw){   // a small static picture, drawn at 2x and published
   const c=document.createElement("canvas"); c.width=Math.round(w*S); c.height=Math.round(h*S);
   await draw(c.getContext("2d")); pubProgress(`מעלה תמונות (${++pubCount})…`);
@@ -895,7 +901,7 @@ async function fontFaceCss(){
   }catch(e){ return ""; }
 }
 async function buildEmail(subject, progress){
-  pubCount=0; pubProgress=progress;
+  pubCount=0; pubOnSite=0; pubProgress=progress;
   const rows=[];
   if(view==="master") rows.push(await MAIL.banner());
   for(const blk of cur()) rows.push(await MAIL[blk.type](styled(blk.f||{},blk.st),blk));
@@ -966,12 +972,22 @@ async function smSend(replace){
     smSet(replace? "מעדכן את הדיוור בסמוב…" : "יוצר את הדיוור בסמוב…");
     const r=await call("api/smoove/campaign",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({subject,html,listIds,design:view,replace})});
     smLast=r.last||smLast; smShowLast();
+    const onSite = pubOnSite? ` שימי לב: ${pubOnSite} תמונות לא עלו לסמוב ונשארו באתר שלך, ואצל נטפרי הן עלולות להיחסם.` : "";
     const after={ deleted:` הדיוור הקודם (${r.previousId}) נמחק.`, gone:` הדיוור הקודם (${r.previousId}) כבר לא היה בסמוב.`,
                   kept:` הדיוור הקודם (${r.previousId}) לא נמחק, כי הוא נשלח או שלא היה אפשר לוודא שלא נשלח. אם צריך, מוחקים אותו בסמוב.` }[r.replaced] || "";
-    smSet(`הדיוור נוצר בסמוב (מספר ${r.id}) ושמור שם.${after} נכנסים לסמוב ← דיוורים, בודקים ושולחים.`, r.replaced==="kept"?"err":"ok");
-  }catch(e){ smSet(e.http? "סמוב לא קיבל את הדיוור: "+e.message : "אין כרגע חיבור לשרת. נסו שוב בעוד דקה.","err"); }
+    smSet(`הדיוור נוצר בסמוב (מספר ${r.id}) ושמור שם.${after}${onSite} נכנסים לסמוב ← דיוורים, בודקים ושולחים.`, r.replaced==="kept"||onSite?"err":"ok");
+  }catch(e){
+    if(e.needCode){ $("smCodeBox").hidden=false; $("smCode").focus(); smSet("סמוב מבקש קוד אימות. הדיוור עוד לא נוצר.","err"); return; } smSet(e.http? "סמוב לא קיבל את הדיוור: "+e.message : "אין כרגע חיבור לשרת. נסו שוב בעוד דקה.","err"); }
   finally{ btns.forEach(b=>b.disabled=false); }
 }
+$("smCodeSend").addEventListener("click",async()=>{
+  const code=$("smCode").value.trim(); if(!/^\d{4,8}$/.test(code)){smSet("הקוד הוא ספרות בלבד","err");return;}
+  $("smCodeSend").disabled=true; smSet("מאמת מול סמוב…");
+  try{ await call("api/smoove/code",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code})});
+    $("smCode").value=""; $("smCodeBox").hidden=true; smSet("מחובר לסמוב. אפשר ללחוץ שוב על יצירת הדיוור.","ok"); }
+  catch(e){ smSet(e.http? e.message : "אין כרגע חיבור לשרת.","err"); }
+  finally{ $("smCodeSend").disabled=false; }
+});
 $("smCreate").addEventListener("click",()=>smSend(false));
 $("smUpdate").addEventListener("click",()=>smSend(true));
 
@@ -980,7 +996,7 @@ async function call(url, opts){
   for(let n=0;;n++){
     try{
       const r=await fetch(url,opts);
-      if(!r.ok){const t=await r.json().catch(()=>({})); throw Object.assign(new Error(t.error||("HTTP "+r.status)),{http:true});}
+      if(!r.ok){const t=await r.json().catch(()=>({})); throw Object.assign(new Error(t.error||("HTTP "+r.status)),{http:true,status:r.status,needCode:!!t.needCode});}
       return r.json();
     }catch(e){ if(e.http||n>=2) throw e; await new Promise(r=>setTimeout(r,1500*(n+1))); }
   }
