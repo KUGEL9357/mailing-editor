@@ -180,6 +180,15 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
           <button id="smCreate" type="button">צור דיוור חדש בסמוב</button>
           <button id="smChangeKey" class="small" type="button">החלף מפתח</button>
         </div>
+        <details id="smLoginBox" style="border:1px solid var(--line);border-radius:8px;padding:8px 12px">
+          <summary style="cursor:pointer;font-size:13px;font-weight:600">תמונות דרך סמוב (בשביל נטפרי): <span id="smLoginState">לא מחובר</span></summary>
+          <div style="display:grid;gap:10px;margin-top:10px">
+            <p class="hint">המשתמש הנוסף שפתחת בסמוב (מייל + סיסמה). נשמר רק בשרת ולא יוצג שוב.</p>
+            <label for="smLoginEmail">מייל<input id="smLoginEmail" type="text" autocomplete="off" spellcheck="false" dir="ltr"></label>
+            <label for="smLoginPass">סיסמה<input id="smLoginPass" type="password" autocomplete="new-password"></label>
+            <div class="actions"><button id="smLoginSave" class="small" type="button">שמור</button></div>
+          </div>
+        </details>
         <p class="hint">נוצר דיוור שמור (לא נשלח). כל הטקסטים והכפתורים נכנסים כטקסט אמיתי; רק לוגו, תמונות וקישוטים הם תמונות (מ-autosuccess.cc), ותמונה שלא השתנתה שומרת על אותה כתובת. בודקים בסמוב ושולחים משם.</p>
       </div>
       <p class="status" id="smStatus" role="status"></p>
@@ -912,10 +921,20 @@ function smShow(configured, lists){
   }
 }
 async function smInit(){
-  try{ const r=await call("api/smoove/status"); smLast=r.last||{}; smShow(r.configured, r.lists); smShowLast(); if(!r.configured) smSet(""); }
+  try{ const r=await call("api/smoove/status"); smLast=r.last||{}; smShow(r.configured, r.lists); smShowLast(); smLoginShow(r.loginEmail); if(!r.configured) smSet(""); }
   catch(e){ smShow(true,[]); smSet(e.http? "סמוב לא ענה: "+e.message : "אין כרגע חיבור לשרת.", "err"); }
 }
 $("smSubject").addEventListener("input",()=>{smSubjectTouched=true;});
+const smLoginShow = email => { $("smLoginState").textContent = email? "מחובר כ-"+email : "לא מחובר"; if(email) $("smLoginEmail").value=email; };
+$("smLoginSave").addEventListener("click",async()=>{
+  const email=$("smLoginEmail").value.trim(), password=$("smLoginPass").value;
+  if(!email||!password){smSet("צריך מייל וסיסמה","err");return;}
+  $("smLoginSave").disabled=true;
+  try{ const r=await call("api/smoove/login",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({email,password})});
+    $("smLoginPass").value=""; smLoginShow(r.loginEmail); $("smLoginBox").open=false; smSet("פרטי הכניסה נשמרו בשרת","ok"); }
+  catch(e){ smSet(e.http? e.message : "אין כרגע חיבור לשרת.","err"); }
+  finally{ $("smLoginSave").disabled=false; }
+});
 $("smConnect").addEventListener("click",async()=>{
   const key=$("smKey").value.trim(); if(!key){smSet("צריך להדביק מפתח","err");return;}
   $("smConnect").disabled=true; smSet("בודק את המפתח מול סמוב…");
