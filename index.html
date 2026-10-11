@@ -97,6 +97,7 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
 <nav class="tabs" role="tablist" aria-label="בחירת עיצוב">
   <button type="button" role="tab" id="tab-master" data-view="master" aria-selected="true">AutoSuccess Master</button>
   <button type="button" role="tab" id="tab-grid" data-view="grid" aria-selected="false">גריד דיוור תוכן</button>
+  <button type="button" role="tab" id="tab-gridcode" data-view="gridcode" aria-selected="false" title="כמו הגריד, אבל במייל כל תמונה מצוירת בקוד, כדי שנטפרי לא יחסום אותה">גריד – תמונות בקוד</button>
 </nav>
 
 <main class="wrap">
@@ -293,7 +294,8 @@ const $ = id => document.getElementById(id);
 
 let state = structuredClone(DEFAULT);
 let view = "master";                       // which design tab is open (a per-browser preference, not saved state)
-try{ if(localStorage.getItem("view")==="grid") view="grid"; }catch(e){}
+try{ const v=localStorage.getItem("view"); if(v==="grid"||v==="gridcode") view=v; }catch(e){}
+const designOf = v => v==="gridcode" ? "grid" : v;   // "gridcode" = the grid design, emailed with every image drawn as table cells
 const cur = () => state.designs[view].blocks;
 let dirty = false;
 const pending = {};        // path -> Blob (uploads not yet saved)
@@ -778,7 +780,7 @@ function stashUpload(file){
 }
 function fillAddTypes(){
   $("addType").replaceChildren();
-  for(const t of Object.keys(TYPES)){ const d=TYPES[t].design; if(d!==view && d!=="both") continue;
+  for(const t of Object.keys(TYPES)){ const d=TYPES[t].design; if(d!==designOf(view) && d!=="both") continue;
     const o=document.createElement("option");o.value=t;o.textContent=t==="upload"?"תמונה מוכנה (העלאת קובץ)":TYPES[t].label;$("addType").append(o); }
 }
 $("addBlock").addEventListener("click",()=>{
@@ -818,7 +820,9 @@ const FONT_BASE = "https://autosuccess.cc/newsletter-img/fonts/";
 const safeUrl = u => /^(https?:\/\/|mailto:)/i.test(String(u||"").trim()) ? String(u).trim() : "https://autosuccess.cc";
 
 async function canvasBlob(c){ return new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/png")); }
+const pxCanvases=[];      // "images as code" tab: canvases waiting for img() to draw them as cells
 async function publishImage(c){
+  if(view==="gridcode") return "px:"+(pxCanvases.push(c)-1);
   const {url,host}=await call("api/smoove/image",{method:"POST",headers:{"content-type":"image/png"},body:await canvasBlob(c)});
   if(host!=="smoove") pubOnSite++;     // fell back to autosuccess.cc: NetFree may hold it
   return url;
@@ -834,7 +838,41 @@ async function iconBox(size,radius,pad){ const icon=await loadImg("assets/grid-i
   return art(size,size,ctx=>{ rect(ctx,0,0,size,size,radius,"#ffffff"); blend(ctx,icon,pad,pad,size-2*pad,size-2*pad); }); }
 async function photoArt(src,w,h){ const img=await loadImg(src); return art(w,h,ctx=>cover(ctx,img,0,0,w,h)); }
 
-const img = (url,w,h,alt="",style="") => `<img src="${url}" width="${w}" height="${h}" alt="${esc(alt)}" style="display:block;width:${w}px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;${style}">`;
+// canvas -> table of coloured cells (NetFree and "block images" never hide HTML). Each cell is `cell` px;
+// neighbours within `tol` merge into one wide cell, identical rows into one tall row; transparent cells stay empty,
+// and so does the page background around full-width pictures (the email's own background shows through).
+function pixelTable(src,W,H,cell,tol=24){
+  const cw=Math.max(1,Math.round(W/cell)), ch=Math.max(1,Math.round(H/cell));
+  const c=document.createElement("canvas"); c.width=cw; c.height=ch;
+  const x=c.getContext("2d"); x.imageSmoothingQuality="high"; x.drawImage(src,0,0,cw,ch);
+  const d=x.getImageData(0,0,cw,ch).data, hex=(r,g,b)=>"#"+[r,g,b].map(v=>Math.min(255,Math.round(v/8)*8).toString(16).padStart(2,"0")).join("");   // 32 shades a channel: longer runs, lighter mail
+  const pg=[1,3,5].map(i=>parseInt(PAGE_BG.slice(i,i+2),16));
+  // half-see-through pixels (soft edges, the faded header wave) are blended onto the card colour the grid's small pictures sit on
+  const un=[1,3,5].map(i=>parseInt(state.banner.soft.slice(i,i+2),16));
+  for(let o=0;o<d.length;o+=4){ const a=d[o+3]/255; if(a<0.1){ d[o+3]=0; continue; } if(a<1){ for(let k=0;k<3;k++) d[o+k]=Math.round(d[o+k]*a+un[k]*(1-a)); d[o+3]=255; } }
+  if(W>=600) for(let o=0;o<d.length;o+=4) if(Math.abs(d[o]-pg[0])+Math.abs(d[o+1]-pg[1])+Math.abs(d[o+2]-pg[2])<=6) d[o+3]=0;
+  const rows=[];
+  for(let y=0;y<ch;y++){ const runs=[];
+    for(let i=0;i<cw;){ const o=(y*cw+i)*4, clear=d[o+3]<128; let n=1;
+      while(i+n<cw){ const q=(y*cw+i+n)*4;
+        if(clear? d[q+3]>=128 : d[q+3]<128||Math.abs(d[q]-d[o])+Math.abs(d[q+1]-d[o+1])+Math.abs(d[q+2]-d[o+2])>tol) break; n++; }
+      runs.push([clear?"":hex(d[o],d[o+1],d[o+2]),n]); i+=n; }
+    const key=runs.join("|");
+    if(rows.length && rows.at(-1).key===key) rows.at(-1).h+=cell; else rows.push({key,runs,h:cell});
+  }
+  // the first, empty row fixes every column's width, so colspan means the same in every client; dir=ltr or RTL mirrors it
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${cw*cell}" dir="ltr" style="border-collapse:collapse;width:${cw*cell}px;font-size:0;line-height:0"><tr>${`<td width="${cell}"></td>`.repeat(cw)}</tr>`+
+    rows.map(r=>`<tr>${r.runs.map(([c,n],k)=>`<td${n>1?` colspan="${n}"`:""}${c?` bgcolor="${c}"`:""}${k?"":` height="${r.h}"`}></td>`).join("")}</tr>`).join("")+`</table>`;
+}
+// sharpest cells that fit the budget: big pictures may take ~40 KB, small ones ~12 KB, full-width strips (the divider,
+// often twice) ~8 KB — Gmail cuts the mail at ~102 KB, and a grid issue is ~15 KB of text
+function pxImage(c,w,h,style){
+  const budget = w*h>=100000 ? 40000 : w>=600 ? 8000 : 12000;
+  let html; for(const cell of [1,2,3,4,5,6,8,10]){ html=pixelTable(c,w,h,cell); if(html.length<=budget) break; }
+  const align = /margin:0 auto/.test(style) ? ` align="center"` : /inline-block/.test(style) ? ` align="left"` : "";
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"${align}><tr><td>${html}</td></tr></table>`;
+}
+const img = (url,w,h,alt="",style="") => String(url).startsWith("px:") ? pxImage(pxCanvases[+url.slice(3)],w,h,style) : `<img src="${url}" width="${w}" height="${h}" alt="${esc(alt)}" style="display:block;width:${w}px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;${style}">`;
 function P(text,{size=16,weight=400,color,lh=1.5,align="right",mt=0,extra=""}={}){
   if(!String(text??"").trim()) return "";
   return `<p style="margin:${mt}px 0 0;font-family:${FONT(text)};font-size:${tSize(text,size)}px;line-height:${lh};font-weight:${weight};color:${color||state.banner.ink};text-align:${align};${extra}">${escBr(text)}</p>`;
@@ -940,7 +978,7 @@ async function fontFaceCss(){
   }catch(e){ return ""; }
 }
 async function buildEmail(subject, progress){
-  pubCount=0; pubOnSite=0; pubProgress=progress;
+  pubCount=0; pubOnSite=0; pubProgress=progress; pxCanvases.length=0;
   const rows=[];
   if(view==="master") rows.push(await MAIL.banner());
   for(const blk of cur()) rows.push(await MAIL[blk.type](styled(blk.f||{},blk.st),blk));
@@ -961,7 +999,7 @@ function smShowLast(){
   if(l) info.textContent=`הדיוור האחרון מהלשונית הזו: מספר ${l.id} · "${l.subject}" (${new Date(l.at).toLocaleString("he-IL",{dateStyle:"short",timeStyle:"short"})}). "עדכן" יוצר גרסה חדשה ומוחק אותו, אם הוא עוד לא נשלח.`;
 }
 function defaultSubject(){
-  if(view==="grid"){ const h=cur().find(b=>b.type==="gheader"); return h? `${h.f.title} · גיליון ${state.banner.issue}` : `גיליון ${state.banner.issue}`; }
+  if(designOf(view)==="grid"){ const h=cur().find(b=>b.type==="gheader"); return h? `${h.f.title} · גיליון ${state.banner.issue}` : `גיליון ${state.banner.issue}`; }
   return `${state.banner.title} · ${pillText(state.banner)}`;
 }
 function smShow(configured, lists){
@@ -1014,7 +1052,9 @@ async function smSend(replace){
     const onSite = pubOnSite? ` שימי לב: ${pubOnSite} תמונות לא עלו לסמוב ונשארו באתר שלך, ואצל נטפרי הן עלולות להיחסם.` : "";
     const after={ deleted:` הדיוור הקודם (${r.previousId}) נמחק.`, gone:` הדיוור הקודם (${r.previousId}) כבר לא היה בסמוב.`,
                   kept:` הדיוור הקודם (${r.previousId}) לא נמחק, כי הוא נשלח או שלא היה אפשר לוודא שלא נשלח. אם צריך, מוחקים אותו בסמוב.` }[r.replaced] || "";
-    smSet(`הדיוור נוצר בסמוב (מספר ${r.id}) ושמור שם.${after}${onSite} נכנסים לסמוב ← דיוורים, בודקים ושולחים.`, r.replaced==="kept"||onSite?"err":"ok");
+    const kb=Math.round(new Blob([html]).size/1024);
+    const weight = view!=="gridcode" ? "" : kb>100 ? ` שימי לב: המייל שוקל ${kb} KB, ו-Gmail יקצץ אותו ("ההודעה נחתכה"). כדאי להוריד תמונה אחת.` : ` משקל המייל: ${kb} KB.`;
+    smSet(`הדיוור נוצר בסמוב (מספר ${r.id}) ושמור שם.${after}${onSite}${weight} נכנסים לסמוב ← דיוורים, בודקים ושולחים.`, r.replaced==="kept"||onSite||kb>100?"err":"ok");
   }catch(e){
     if(e.needCode){ $("smCodeBox").hidden=false; $("smCode").focus(); smSet("סמוב מבקש קוד אימות. הדיוור עוד לא נוצר.","err"); return; } smSet(e.http? "סמוב לא קיבל את הדיוור: "+e.message : "אין כרגע חיבור לשרת. נסו שוב בעוד דקה.","err"); }
   finally{ btns.forEach(b=>b.disabled=false); }
@@ -1103,6 +1143,8 @@ function migrate(s){
   const d=s.designs||{master:{blocks:s.blocks}}; delete s.blocks;
   s.designs={ master:{blocks: d.master?.blocks ? fixBlocks(d.master.blocks) : structuredClone(DEFAULT.designs.master.blocks)},
               grid:  {blocks: d.grid?.blocks   ? fixBlocks(d.grid.blocks)   : GRID_START()} };
+  // the "images as code" tab starts as a copy of the grid issue, then is edited on its own
+  s.designs.gridcode={blocks: d.gridcode?.blocks ? fixBlocks(d.gridcode.blocks) : structuredClone(s.designs.grid.blocks)};
   return s;
 }
 
