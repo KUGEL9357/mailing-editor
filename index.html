@@ -74,6 +74,8 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
 .proof .sheet canvas.blk:hover{outline:2px dashed var(--brand);outline-offset:-2px}
 .proof .label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
 .hint{font-size:12px;color:var(--muted);margin:0}
+.pxrules{margin:10px 0 0;padding:12px 14px;border-radius:10px;background:var(--soft,#eef6fa);border-right:4px solid var(--brand);font-size:13px;line-height:1.6}
+.pxrules ul{margin:6px 0 0;padding-inline-start:18px}.pxrules b{color:var(--fg)}
 .style-row{display:flex;gap:6px;margin-top:-4px}
 .style-row select{width:auto;flex:1;padding:4px 8px;font-size:13px}
 .tabs{max-width:1180px;margin:0 auto 18px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line)}
@@ -128,6 +130,18 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
     <div class="panel">
       <h2>בלוקים בדיוור</h2>
       <p class="hint">פותחים בלוק כדי לערוך את הטקסטים שלו. אפשר גם ללחוץ על בלוק בתצוגה המקדימה. ירידת שורה בטקסט: Enter. "+ שדה דינמי" מכניס למשל [[שם פרטי]], וסמוב מחליף אותו בשם של כל נמען.</p>
+      <div class="pxrules" id="pxRules" hidden>
+        <b>תמונות בלשונית הזו: מה מתאים ומה לא</b>
+        <ul>
+          <li>במייל כל תמונה מצוירת כפסיפס של משבצות צבע, כדי שנטפרי לא יחסום אותה. כאן בתצוגה היא עדיין נראית רגילה.</li>
+          <li><b>תמונה גדולה ברוחב מלא: אחת בכל גיליון.</b> עם שתיים המייל עלול לעבור את הגבול של Gmail, ו-Gmail יקצץ את הסוף שלו, כולל קישור ההסרה.</li>
+          <li><b>מתאים:</b> איורים פשוטים עם צבעים אחידים, אייקונים, לוגו וצורות.</li>
+          <li><b>לא מתאים:</b> טקסט בתוך התמונה, כי במייל הוא לא יהיה קריא. כותבים אותו בבלוק טקסט. גם צילומים עם הרבה פרטים ומעברי צבע לא מתאימים: הם יוצאים כבדים ומטושטשים.</li>
+          <li>תמונה קטנה בצד של כרטיס יוצאת מפוקסלת יותר. אם היא חשובה, עדיף לשים אותה "מתחת לכיתוב, לכל הרוחב".</li>
+          <li>אחרי "צור דיוור בסמוב" כתוב כמה המייל שוקל. עד 100KB זה תקין. מעל זה העורך מזהיר.</li>
+          <li>לפני השליחה לרשימה, שולחים "שליחה לבדיקה" לכתובת עם נטפרי ובודקים איך זה נראה בפועל.</li>
+        </ul>
+      </div>
       <ol class="blocks" id="blockList"></ol>
       <div class="actions">
         <label for="addType" style="display:flex;gap:8px;align-items:center">הוסף בלוק
@@ -669,7 +683,7 @@ function render(){ renderList(); schedule(); }
 function setView(v){
   view=v; try{localStorage.setItem("view",v);}catch(e){}
   document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.view===v)));
-  const m=v==="master";
+  const m=v==="master"; $("pxRules").hidden = v!=="gridcode";
   $("bannerFields").hidden=!m; $("bannerPreview").hidden=!m; $("dlBanner").hidden=!m; $("pillWrap").hidden=!m;
   openSet.clear(); fillAddTypes(); render();
   if(!smSubjectTouched && !$("smReady").hidden) $("smSubject").value=defaultSubject();
