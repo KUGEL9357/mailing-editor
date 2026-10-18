@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>חתימה מונפשת · תצוגה מקדימה</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  :root{--ink:#12384f;--brand:#4a9fd1;--bg:#f4f8fb;--muted:#5b7486;--pill:#f4c7a6}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Heebo","Arimo",Arial,sans-serif;line-height:1.6}
+  main{max-width:900px;margin:0 auto;padding:28px 16px 60px}
+  h1{font-size:26px;margin:0 0 6px}
+  .lead{color:var(--muted);margin:0 0 16px}
+  .opt{background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(18,56,79,.08);padding:18px;margin-bottom:22px}
+  .opt h2{font-size:19px;margin:0 0 4px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .num{background:var(--brand);color:#fff;border-radius:50%;width:28px;height:28px;display:inline-grid;place-items:center;font-size:15px}
+  .opt p{margin:0 0 12px;color:var(--muted);font-size:15px}
+  canvas{width:100%;max-width:500px;height:auto;display:block;border-radius:6px;border:1px solid #e3edf3}
+  .rec{font-size:13px;background:#fff6ee;color:#7a4a25;border-radius:999px;padding:2px 10px;font-weight:500}
+  .zoom{width:100%;max-width:300px;aspect-ratio:1/1;overflow:hidden;border-radius:10px;display:inline-block;margin-left:12px;position:relative}
+  .zoom canvas{position:absolute;left:0;top:0;width:500%;max-width:none;border:0;border-radius:0}
+  .note{background:#fff;border-right:4px solid var(--pill);border-radius:10px;padding:14px 16px;font-size:15px}
+</style>
+</head>
+<body>
+<main>
+  <h1>החתימה למייל, עם תנועה</h1>
+  <p class="lead">שילוב של 1 ו-3: פס אור עובר על כל החתימה, כולל הכיתוב, ואחריו נקודת אור רצה על הגל שבלוגו, החץ זוהר ונקודה גולשת על הקו המפריד. בגודל שבו החתימה תופיע במייל (500×117).</p>
+  <section class="opt">
+    <h2>כהה</h2>
+    <canvas data-style="combo" data-v="dark" width="1200" height="280"></canvas>
+  </section>
+  <section class="opt">
+    <h2>בהירה</h2>
+    <canvas data-style="combo" data-v="light" width="1200" height="280"></canvas>
+  </section>
+
+  <section class="opt">
+    <h2>תקריב על האצבע</h2>
+    <div class="zoom"><canvas data-style="combo" data-v="dark" width="1200" height="280"></canvas></div>
+    <div class="zoom"><canvas data-style="combo" data-v="light" width="1200" height="280"></canvas></div>
+  </section>
+
+  <div class="note">
+    <b>במייל:</b> החתימה תהיה קובץ GIF. Gmail ואפליקציות בטלפון מציגים אותו בתנועה, ו-Outlook במחשב מציג רק את התמונה הראשונה. לכן בכל סגנון התמונה הראשונה היא החתימה המלאה.
+  </div>
+</main>
+
+<script>
+/* The signature PNG exported from Canva (Newsletter Master pages 5–6) is the base; only what moves is covered
+   with the background colour and redrawn: the logo symbol as vectors, the texts by lifting a veil. */
+const W=1200, H=280;
+let base, BG, DARK, L={}, MASK;
+const GLINT=document.createElement("canvas"); GLINT.width=W; GLINT.height=H;
+
+const svgNS="http://www.w3.org/2000/svg", host=document.createElementNS(svgNS,"svg");
+host.style.cssText="position:absolute;width:0;height:0"; document.body.appendChild(host);
+function mk(d){ const p=document.createElementNS(svgNS,"path"); p.setAttribute("d",d); host.appendChild(p); return {p2:new Path2D(d), el:p, len:p.getTotalLength()}; }
+
+/* logo symbol (CRM logo-symbol.svg) */
+const LOGO_BOX={x:28.75,y:24.75,w:179.5,h:177.5};
+const LOGO={rect:mk("M55 29 H182 A22 22 0 0 1 204 51 V176 A22 22 0 0 1 182 198 H55 A22 22 0 0 1 33 176 V51 A22 22 0 0 1 55 29 Z"),
+  wave:mk("M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"),
+  arrow:mk("M52 188 L 178 66"), head:mk("M150 66 L 178 66 L 178 94")};
+
+/* pointing hand in the empty top-left corner: the banner is a link (her pick, LottieFiles "hand tap" #4).
+   Bold line-art hand tilted up-left; hand units 24×24, tip = the fingertip; x/y = where the tip rests */
+const HAND={x:92,y:54,s:2.5, tilt:-28*Math.PI/180, tip:[9,2.5],
+  body:new Path2D("M7 15 V4.5 a2 2 0 0 1 4 0 V10 a2 2 0 0 1 4 0 v.5 a2 2 0 0 1 4 0 V16 a6 6 0 0 1 -6 6 h-2.5 a5 5 0 0 1 -3.8 -1.7 L3.6 16.6 a1.8 1.8 0 0 1 2.6 -2.5 Z"),
+  creases:new Path2D("M11 10 v3 M15 10.5 v2.5")};
+
+const clamp=(v,a=0,c=1)=>Math.min(c,Math.max(a,v));
+const seg=(t,a,c)=>clamp((t-a)/(c-a));
+const easeOut=x=>1-Math.pow(1-x,3);
+const easeInOut=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+
+/* ---- measure the PNG: background, logo, text lines, divider, the three bubbles ---- */
+function measure(img){
+  const c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d"); x.drawImage(img,0,0,W,H);
+  const d=x.getImageData(0,0,W,H).data, at=(a,y)=>(y*W+a)*4;
+  BG=[d[at(3,3)],d[at(3,3)+1],d[at(3,3)+2]]; DARK=BG[0]+BG[1]+BG[2]<384;
+  const ink=(a,y)=>{const k=at(a,y); return Math.abs(d[k]-BG[0])+Math.abs(d[k+1]-BG[1])+Math.abs(d[k+2]-BG[2])>40;};
+  const bbox=(x0,y0,x1,y1)=>{let l=1e9,t=1e9,r=-1,b=-1; for(let y=y0;y<y1;y++)for(let a=x0;a<x1;a++) if(ink(a,y)){l=Math.min(l,a);t=Math.min(t,y);r=Math.max(r,a);b=Math.max(b,y);} return {x:l,y:t,w:r-l+1,h:b-t+1};};
+  const m=x.createImageData(W,H);
+  for(let k=0;k<d.length;k+=4){ const dd=Math.abs(d[k]-BG[0])+Math.abs(d[k+1]-BG[1])+Math.abs(d[k+2]-BG[2]); m.data[k]=m.data[k+1]=m.data[k+2]=255; m.data[k+3]=Math.min(255,dd*2); }
+  MASK=document.createElement("canvas"); MASK.width=W; MASK.height=H; MASK.getContext("2d").putImageData(m,0,0);
+  L={icon:bbox(900,0,W,160), brand:bbox(900,160,W,H), divider:bbox(845,0,890,H)};
+  const bands=[]; let s=-1;
+  for(let y=0;y<=H;y++){ let n=false; if(y<H) for(let a=0;a<850;a++) if(ink(a,y)){n=true;break;} if(n&&s<0)s=y; if(!n&&s>=0){bands.push([s,y-1]);s=-1;} }
+  const lines=bands.map(([t,b])=>bbox(0,t,850,b+1)), pills=lines.pop();   // the last band is the bubble row
+  [L.name,L.slogan,L.services]=lines;
+  L.bubbles=[]; let run=-1;
+  for(let a=0;a<=850;a++){ let n=false; if(a<850) for(let y=pills.y;y<pills.y+pills.h;y++) if(ink(a,y)){n=true;break;}
+    if(n&&run<0) run=a; if(!n&&run>=0){ if(a-run>60) L.bubbles.push({x:run,y:pills.y,w:a-run,h:pills.h}); run=-1; } }
+  L.bubbles.sort((p,q)=>q.x-p.x);   // right to left, the reading order
+}
+
+const bgc=a=>`rgba(${BG},${a})`;
+const pad=(r,p)=>({x:r.x-p,y:r.y-p,w:r.w+2*p,h:r.h+2*p});
+function cover(ctx,r,a=1,p=4){ if(a<=0) return; const q=pad(r,p); ctx.fillStyle=bgc(a); ctx.fillRect(q.x,q.y,q.w,q.h); }
+function partial(ctx,o,f){ if(f<=0) return; ctx.setLineDash(f>=1?[]:[o.len*f,o.len+20]); ctx.stroke(o.p2); ctx.setLineDash([]); }
+function glowDot(ctx,x,y,r,a){ if(a<=0) return; const g=ctx.createRadialGradient(x,y,0,x,y,r);
+  if(DARK){ g.addColorStop(0,`rgba(255,255,255,${a})`); g.addColorStop(.4,`rgba(170,226,248,${.8*a})`); g.addColorStop(1,"rgba(170,226,248,0)"); }
+  else    { g.addColorStop(0,`rgba(255,255,255,${a})`); g.addColorStop(.35,`rgba(108,203,232,${.9*a})`); g.addColorStop(1,"rgba(74,159,209,0)"); }
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+function sweep(ctx,r,at,radius,strength){
+  if(at==null||at<0||at>1) return;
+  strength ??= DARK? .35 : .7;
+  ctx.save(); const clip=new Path2D(); clip.roundRect(r.x,r.y,r.w,r.h,radius); ctx.clip(clip);
+  if(DARK) ctx.globalCompositeOperation="lighter";
+  const bx=r.x+r.w+70-(r.w+140)*at, g=ctx.createLinearGradient(bx-50,0,bx+50,0), c=DARK?"255,255,255":"108,203,232";
+  g.addColorStop(0,`rgba(${c},0)`); g.addColorStop(.5,`rgba(${c},${DARK?strength:strength*.45})`); g.addColorStop(1,`rgba(${c},0)`);
+  ctx.fillStyle=g; ctx.translate(bx,0); ctx.transform(1,0,-.35,1,0,0); ctx.translate(-bx,0); ctx.fillRect(bx-50,0,100,H); ctx.restore();
+}
+
+// a band of light crossing the whole signature right to left (reading order), shown only on the letters, borders and logo
+function glint(ctx,at){
+  if(at==null||at<0||at>1) return;
+  const g=GLINT.getContext("2d"), bx=W+120-(W+240)*at;
+  g.globalCompositeOperation="source-over"; g.clearRect(0,0,W,H);
+  const gr=g.createLinearGradient(bx-70,0,bx+70,0), c=DARK?"255,255,255":"150,215,240";
+  gr.addColorStop(0,`rgba(${c},0)`); gr.addColorStop(.5,`rgba(${c},${DARK?.85:.95})`); gr.addColorStop(1,`rgba(${c},0)`);
+  g.save(); g.fillStyle=gr; g.translate(bx,0); g.transform(1,0,-.35,1,0,0); g.translate(-bx,0); g.fillRect(bx-70,0,140,H); g.restore();
+  g.globalCompositeOperation="destination-in"; g.drawImage(MASK,0,0);
+  ctx.save(); if(DARK) ctx.globalCompositeOperation="lighter"; ctx.drawImage(GLINT,0,0); ctx.restore();
+}
+
+// tap: 0 … 1 — the hand leans in and presses (tilts forward, shrinks a little), a dot appears under the fingertip
+// and opens into a ring that grows and fades; the hand comes back. hover: −1 … 1, a gentle float between clicks.
+// Both null/0 = the still hand of frame 0.
+function drawHand(ctx,tap,hover=0){
+  const t=tap??-1, dir=-Math.PI/2+HAND.tilt, press=easeInOut(seg(t,0,.25))*(1-easeInOut(seg(t,.4,.7)));
+  const tx=HAND.x+4*press*Math.cos(dir), ty=HAND.y+4*press*Math.sin(dir)+2.5*hover;
+  const accent=DARK?"140,220,250":"74,159,209", ink=DARK?"#FFFFFF":"#173A55";
+  const ring=seg(t,.22,.9);
+  if(ring>0&&ring<1){
+    const bx=HAND.x+4*Math.cos(dir), by=HAND.y+4*Math.sin(dir), e=easeOut(ring);
+    if(ring<.25){ ctx.fillStyle=`rgba(${accent},${.9})`; ctx.beginPath(); ctx.arc(bx,by,3+5*seg(ring,0,.25),0,Math.PI*2); ctx.fill(); }   // the dot
+    ctx.strokeStyle=`rgba(${accent},${1-seg(ring,.35,1)})`; ctx.lineWidth=5-3*e;
+    ctx.beginPath(); ctx.arc(bx,by,6+16*e,0,Math.PI*2); ctx.stroke();
+  }
+  ctx.save(); ctx.translate(tx,ty); ctx.rotate(HAND.tilt-.12*press); ctx.scale(HAND.s*(1-.08*press),HAND.s*(1-.08*press)); ctx.translate(-HAND.tip[0],-HAND.tip[1]);
+  ctx.fillStyle=DARK?`rgb(${BG})`:"#FFFFFF"; ctx.fill(HAND.body);
+  ctx.strokeStyle=ink; ctx.lineWidth=1.9; ctx.lineJoin="round"; ctx.lineCap="round"; ctx.stroke(HAND.body); ctx.stroke(HAND.creases);
+  ctx.restore();
+}
+
+/* ---- one frame; every default is the still signature ---- */
+function draw(ctx,q={}){
+  const p={logo:null, fade:{}, shine:null, glint:null, line:null, tap:null, hover:0, ...q};
+  ctx.save(); ctx.drawImage(base,0,0,W,H);
+  if(p.logo){
+    cover(ctx,L.icon,1,6);
+    ctx.save(); const r=L.icon; ctx.translate(r.x,r.y); ctx.scale(r.w/LOGO_BOX.w,r.h/LOGO_BOX.h); ctx.translate(-LOGO_BOX.x,-LOGO_BOX.y);
+    const g=ctx.createLinearGradient(33,29,204,198); g.addColorStop(0,"#6CCBE8"); g.addColorStop(1,"#3F8CD2");
+    ctx.strokeStyle=g; ctx.lineWidth=8.5; ctx.lineCap="round"; ctx.lineJoin="round";
+    partial(ctx,LOGO.rect,p.logo.rect); partial(ctx,LOGO.wave,p.logo.wave);
+    if(p.logo.glow){ ctx.shadowColor=DARK?"rgba(140,220,250,.95)":"rgba(74,159,209,.8)"; ctx.shadowBlur=22*p.logo.glow; }
+    partial(ctx,LOGO.arrow,p.logo.arrow);
+    ctx.globalAlpha=p.logo.head; partial(ctx,LOGO.head,p.logo.head>0?1:0); ctx.globalAlpha=1; ctx.shadowBlur=0;
+    if(p.logo.tracer!=null){ const pt=LOGO.wave.el.getPointAtLength(LOGO.wave.len*p.logo.tracer); glowDot(ctx,pt.x,pt.y,20,p.logo.tracerA); }
+    ctx.restore();
+  }
+  const f=p.fade;
+  for(const k of ["name","slogan","services","brand","divider"]) if(f[k]!=null) cover(ctx,L[k],1-f[k],k==="divider"?2:5);
+  L.bubbles.forEach((r,i)=>{ const v=f["b"+i]; if(v!=null) cover(ctx,r,1-v,4); });
+  if(p.glint!=null){ glint(ctx,p.glint); const bx=W+120-(W+240)*p.glint; L.bubbles.forEach(r=>sweep(ctx,r,(r.x+r.w+70-bx)/(r.w+140),r.h/2,DARK?.22:.45)); }   // same band, faintly inside the bubbles
+  if(p.line){ const dv=L.divider; glowDot(ctx,dv.x+dv.w/2,dv.y+dv.h*p.line.at,11,p.line.a); }
+  drawHand(ctx,p.tap,p.hover);
+  if(p.shine!=null){ L.bubbles.forEach((r,i)=>sweep(ctx,r,p.shine*1.25-i*.12,r.h/2)); sweep(ctx,pad(L.icon,4),p.shine*1.25-.45,22,DARK?.3:.6); }
+  ctx.restore();
+}
+
+/* ---- styles: seconds → what moves. Frame 0 is always the full signature (Outlook shows only it). ---- */
+const STYLES={
+  combo:{len:7, at(t){
+    const sh=seg(t,.4,2.2), l=seg(t,2.4,4.4), d=seg(t,4.3,6.0);
+    return {glint:t>=.4&&t<=2.2? easeInOut(sh) : null,
+            logo:{rect:1,wave:1,arrow:1,head:1, tracer:l, tracerA:Math.sin(Math.PI*l), glow:Math.sin(Math.PI*seg(t,4.0,5.0))},
+            line:{at:easeInOut(d), a:Math.sin(Math.PI*d)},
+            tap:t>=1.0&&t<2.2? seg(t,1.0,2.2) : t>=5.0&&t<6.2? seg(t,5.0,6.2) : null,   // two clicks per loop
+            hover:t>=2.2&&t<5.0? Math.sin(Math.PI*2*seg(t,2.2,5.0)) : 0};
+  }},
+  gentle:{len:5, at(t){
+    const l=seg(t,.3,2.6), d=seg(t,2.6,4.4);
+    return {logo:{rect:1,wave:1,arrow:1,head:1, tracer:l, tracerA:Math.sin(Math.PI*l), glow:Math.sin(Math.PI*seg(t,2.2,3.2))},
+            line:{at:easeInOut(d), a:Math.sin(Math.PI*d)}};
+  }},
+  build:{len:6.5, at(t){
+    if(t<3.2) return {};
+    const u=t-3.2;
+    if(u<.35){ const a=1-u/.35; return {logo:{rect:a,wave:a,arrow:a,head:a}, fade:{name:a,slogan:a,services:a,brand:a,divider:a,b0:a,b1:a,b2:a}}; }
+    const v=u-.35;   // 0 … 2.95
+    return {
+      logo:{rect:easeInOut(seg(v,0,.8)), wave:easeInOut(seg(v,.5,1.1)), arrow:easeOut(seg(v,1.0,1.4)), head:seg(v,1.35,1.45), glow:Math.sin(Math.PI*seg(v,1.4,2.0))},
+      fade:{brand:seg(v,.7,1.1), divider:seg(v,.8,1.2), name:seg(v,1.0,1.4), slogan:seg(v,1.3,1.7), services:seg(v,1.6,2.0),
+            b0:seg(v,1.9,2.15), b1:seg(v,2.1,2.35), b2:seg(v,2.3,2.55)}
+    };
+  }},
+  shine:{len:4.5, at(t){ return {shine:t<1.6? t/1.6 : null}; }}
+};
+
+const STATE={};
+async function load(v){
+  const img=new Image(); img.src=`assets/signature/${v}.png?v=20261018`; await img.decode(); measure(img);
+  STATE[v]={base:img, BG, DARK, L, MASK};
+}
+function use(v){ ({base,BG,DARK,L,MASK}=STATE[v]); }
+
+(async()=>{
+  for(const v of ["dark","light"]) await load(v);
+  const items=[...document.querySelectorAll("canvas[data-style]")].map(c=>({ctx:c.getContext("2d"),s:STYLES[c.dataset.style],v:c.dataset.v}));
+  const t0=performance.now();
+  (function loop(now){ const t=(now-t0)/1000; for(const it of items){ use(it.v); draw(it.ctx,it.s.at(t%it.s.len)); } requestAnimationFrame(loop); })(t0);
+})();
+</script>
+</body>
+</html>

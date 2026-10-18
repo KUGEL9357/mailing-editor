@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>חתימה ב-Gmail</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  :root{--ink:#12384f;--brand:#4a9fd1;--bg:#f4f8fb;--muted:#5b7486;--pill:#f4c7a6}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Heebo","Arimo",Arial,sans-serif;line-height:1.7}
+  main{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+  h1{font-size:26px;margin:0 0 4px} h2{font-size:19px;margin:0 0 10px}
+  .lead{color:var(--muted);margin:0 0 22px}
+  .card{background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(18,56,79,.08);padding:18px;margin-bottom:18px}
+  .sig{display:grid;gap:14px}
+  .sig img{max-width:100%;height:auto;display:block;border-radius:4px;border:1px solid #e3edf3}
+  a.btn,button{font:inherit;display:inline-block;background:var(--brand);color:#fff;border:0;border-radius:999px;padding:8px 20px;text-decoration:none;cursor:pointer}
+  ol{margin:0;padding-inline-start:22px} li{margin-bottom:8px}
+  b{color:var(--ink)} .muted{color:var(--muted);font-size:15px}
+  .copy{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .line{background:var(--bg);border-radius:10px;padding:8px 12px;font-size:15px}
+  .note{border-right:4px solid var(--pill)}
+</style>
+</head>
+<body>
+<main>
+  <h1>החתימה המונפשת ב-Gmail</h1>
+  <p class="lead">דרך Google Drive. לוקח כחמש דקות, פעם אחת.</p>
+
+  <section class="card sig">
+    <h2>1. מורידים את החתימה</h2>
+    <p class="muted" style="margin:0">הקבצים כבר בגודל של חתימה (500×117), כך שב-Gmail בוחרים "גודל מקורי" ולא צריך לשנות כלום.</p>
+    <img src="assets/signature/signature-dark-500.gif?v=20261018e" width="500" height="117" alt="חתימה כהה">
+    <div><a class="btn" href="assets/signature/signature-dark-500.gif?v=20261018e" download="חתימה-כהה.gif">הורדת הכהה</a></div>
+    <img src="assets/signature/signature-light-500.gif?v=20261018e" width="500" height="117" alt="חתימה בהירה">
+    <div><a class="btn" href="assets/signature/signature-light-500.gif?v=20261018e" download="חתימה-בהירה.gif">הורדת הבהירה</a></div>
+  </section>
+
+  <section class="card">
+    <h2>2. מעלים ל-Google Drive ומשתפים</h2>
+    <ol>
+      <li>ב-Drive: <b>חדש</b> ← <b>העלאת קובץ</b>, ובוחרים את הקובץ שהורדת.</li>
+      <li>לחיצה ימנית על הקובץ ← <b>שיתוף</b> ← <b>שיתוף</b>.</li>
+      <li>תחת "גישה כללית" בוחרים <b>כל מי שיש לו את הקישור</b>, בתפקיד <b>צפייה</b>, ולוחצים <b>סיום</b>.<br>
+        <span class="muted">בלי השלב הזה הנמענים יראו ריבוע ריק במקום החתימה.</span></li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>3. מכניסים לחתימה ב-Gmail</h2>
+    <ol>
+      <li>ב-Gmail: גלגל השיניים ← <b>הצגת כל ההגדרות</b> ← לשונית <b>כללי</b> ← גוללים ל<b>חתימה</b> ← <b>יצירת חתימה חדשה</b>, ונותנים לה שם, למשל AutoSuccess.</li>
+      <li>בתיבת החתימה לוחצים על סמל <b>הוספת תמונה</b>, עוברים ללשונית <b>Drive שלי</b>, בוחרים את הקובץ ולוחצים <b>בחירה</b>.</li>
+      <li>לוחצים על התמונה בתיבה, ובוחרים למטה <b>גודל מקורי</b>.</li>
+      <li>רוצה שלחיצה על החתימה תפתח את האתר? מסמנים את התמונה, לוחצים על סמל <b>הקישור</b> ומדביקים <span dir="ltr">https://autosuccess.cc</span>.</li>
+      <li>יורדים שורה מתחת לתמונה ומדביקים את שורת הטקסט שלמטה (שלב 4).</li>
+      <li>תחת "ברירות מחדל לחתימה" בוחרים את החתימה <b>להודעות חדשות</b> וגם <b>לתשובות ולהעברות</b>.</li>
+      <li>גוללים לתחתית העמוד ולוחצים <b>שמירת השינויים</b>.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>4. שורת טקסט מתחת לחתימה</h2>
+    <p class="muted">למי שהתמונה לא מוצגת אצלו (למשל מאחורי נטפרי), וכדי שאפשר יהיה ללחוץ על המייל ועל הטלפון.</p>
+    <div class="copy">
+      <span class="line" id="line">רויזי קוגל | AutoSuccess · info@autosuccess.cc · 058-3219356 · autosuccess.cc</span>
+      <button type="button" id="copyBtn">העתקה</button>
+    </div>
+  </section>
+
+  <section class="card note">
+    <h2>5. בודקים</h2>
+    <p style="margin:0">שולחים מייל לעצמך ופותחים אותו. בתיבת העריכה של Gmail החתימה לפעמים נראית עומדת, אבל במייל שהתקבל היא זזה. אם מופיע ריבוע ריק, כנראה השיתוף בשלב 2 לא נשמר.</p>
+  </section>
+</main>
+<script>
+document.getElementById("copyBtn").addEventListener("click",async e=>{
+  const t=document.getElementById("line").textContent;
+  try{ await navigator.clipboard.writeText(t); e.target.textContent="הועתק ✓"; }
+  catch{ const r=document.createRange(); r.selectNodeContents(document.getElementById("line")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); e.target.textContent="סמנתי, לחצי Ctrl+C"; }
+});
+</script>
+</body>
+</html>
