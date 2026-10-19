@@ -27,6 +27,10 @@
   --paper-shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.35); color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+.style-panel{border:2px solid var(--brand)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px}
+.seg button{border:0;background:transparent;font-weight:700;padding:9px 6px}
+.seg button[aria-checked="true"]{background:#1f3a5f;color:#fff}
 body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--ui);direction:rtl;padding-inline:16px;padding-block:20px 48px}
 .wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 640px;gap:28px;align-items:start}
 @media (max-width:1000px){.wrap{grid-template-columns:minmax(0,1fr)}}
@@ -119,6 +123,14 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
 
 <main class="wrap">
   <section class="controls">
+    <div class="panel style-panel" id="dStyleWrap">
+      <h2>סגנון הדיוור</h2>
+      <div class="seg" role="radiogroup" aria-label="סגנון הדיוור">
+        <button type="button" role="radio" data-style="balanced">מאוזן (כמו האתר)</button>
+        <button type="button" role="radio" data-style="classic">קלאסי (כמו עד היום)</button>
+      </div>
+      <p class="hint" id="dStyleHint">מחליף רק את הצבעים והגופנים. הטקסטים, התמונות והבלוקים לא משתנים. אחרי הבחירה לוחצים "שמור שינויים".</p>
+    </div>
     <div class="panel">
       <h2>פרטי הגיליון (משותף לשני העיצובים)</h2>
       <div class="row">
@@ -169,12 +181,6 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
 
     <div class="panel">
       <h2>עיצוב</h2>
-      <div id="dStyleWrap" style="display:grid;gap:6px">
-        <label for="dStyle">סגנון הלשונית הזו
-          <select id="dStyle"><option value="balanced">מאוזן (כמו האתר)</option><option value="classic">קלאסי (כמו עד היום)</option></select>
-        </label>
-        <p class="hint" id="dStyleHint" hidden>בסגנון "מאוזן" הפונטים והצבעים קבועים לפי האתר. לשינוי ידני חוזרים ל"קלאסי". הטקסטים והתמונות לא משתנים.</p>
-      </div>
       <div class="row">
         <label for="font">פונט (לכל הדיוור)
           <select id="font">
@@ -1235,10 +1241,13 @@ function bannerStyleRows(){
 }
 function syncStyle(){
   $("dStyleWrap").hidden = designOf(view)!=="grid";
-  $("dStyle").value=styleOf(); const bal=BAL(); $("dStyleHint").hidden=!bal;
+  const bal=BAL();
+  document.querySelectorAll("#dStyleWrap [data-style]").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.style===styleOf())));
   for(const id of ["font","decor","brand","ink","pill","soft","resetColors"]) $(id).disabled=bal;
 }
-$("dStyle").addEventListener("change",()=>{ state.designs[view].style=$("dStyle").value; syncStyle(); markDirty(); schedule(); });
+document.querySelectorAll("#dStyleWrap [data-style]").forEach(b=>b.addEventListener("click",()=>{
+  if(styleOf()===b.dataset.style) return;
+  state.designs[view].style=b.dataset.style; syncStyle(); markDirty(); schedule(); }));
 $("resetColors").addEventListener("click",()=>{Object.assign(state.banner,BRAND);fillForm();markDirty();schedule();});
 
 // state saved by the first version of the editor held flat images (blocks/NN-*.png); turn those into live blocks
