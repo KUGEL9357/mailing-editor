@@ -81,6 +81,20 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
 .tabs{max-width:1180px;margin:0 auto 18px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line)}
 .tabs button{border:0;border-radius:10px 10px 0 0;background:none;color:var(--muted);padding:10px 18px;border-bottom:3px solid transparent;margin-bottom:-1px}
 .tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--brand);background:var(--panel)}
+/* "תמונות לדיוור": every image AutoArt makes, ready to drop into the issue */
+.gallery{max-width:1180px;margin:0 auto}
+.g-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;justify-content:space-between}
+.g-head > div{flex:1 1 320px}
+.g-head label{width:auto}
+.g-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.g-card{margin:0;border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:hidden;display:grid;grid-template-rows:auto 1fr}
+.g-card a.g-img{display:grid;place-items:center;aspect-ratio:4/3;background:repeating-conic-gradient(var(--line) 0 25%,transparent 0 50%) 0 0/16px 16px}
+.g-card img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.g-card figcaption{padding:10px 12px;display:grid;gap:6px;align-content:start}
+.g-card .g-title{font-weight:600;color:var(--fg);line-height:1.35}
+.g-card .g-meta{font-size:12px;color:var(--muted)}
+.g-card .g-warn{font-size:12px;color:var(--danger)}
+.g-empty{color:var(--muted);padding:20px 4px}
 .offline{position:fixed;inset-inline:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--danger);color:#fff;text-align:center;font-weight:600}
 @media (prefers-reduced-motion:no-preference){button{transition:border-color .15s}}
 </style>
@@ -100,6 +114,7 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
   <button type="button" role="tab" id="tab-master" data-view="master" aria-selected="true">AutoSuccess Master</button>
   <button type="button" role="tab" id="tab-grid" data-view="grid" aria-selected="false">גריד דיוור תוכן</button>
   <button type="button" role="tab" id="tab-gridcode" data-view="gridcode" aria-selected="false" title="כמו הגריד, אבל במייל כל תמונה מצוירת בקוד, כדי שנטפרי לא יחסום אותה">גריד – תמונות בקוד</button>
+  <button type="button" role="tab" id="tab-gallery" aria-selected="false" title="כל תמונה שאוטוארט יוצר נכנסת לכאן לבד">תמונות לדיוור</button>
 </nav>
 
 <main class="wrap">
@@ -233,6 +248,19 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
     <div class="sheet scroll" id="stack"></div>
   </aside>
 </main>
+
+<section class="gallery" id="galleryView" hidden>
+  <div class="panel">
+    <div class="g-head">
+      <div><h2>תמונות לדיוור</h2><p class="hint">כל תמונה שאוטוארט יוצר נכנסת לכאן לבד, החדשות למעלה. "הוסף לדיוור" מוסיף אותה כבלוק תמונה בסוף הגיליון, בעיצוב שבחרת כאן. משם אפשר להזיז אותה, ואז "שמור שינויים". לחיצה על תמונה פותחת אותה בגודל מלא.</p></div>
+      <label for="gTarget">להוסיף לעיצוב
+        <select id="gTarget"><option value="master">AutoSuccess Master</option><option value="grid">גריד דיוור תוכן</option><option value="gridcode">גריד – תמונות בקוד</option></select>
+      </label>
+      <label for="gSearch">חיפוש<input id="gSearch" type="text" autocomplete="off" placeholder="למשל: באנר"></label>
+    </div>
+    <div class="g-grid" id="gGrid"></div>
+  </div>
+</section>
 
 <div id="offline" class="offline" role="alert" hidden>אין כרגע חיבור לשרת. אפשר להמשיך לערוך; השמירה תעבוד כשהחיבור יחזור (בדרך כלל תוך דקה).</div>
 <script>
@@ -689,7 +717,49 @@ function setView(v){
   if(!smSubjectTouched && !$("smReady").hidden) $("smSubject").value=defaultSubject();
   smShowLast();
 }
-document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
+document.querySelectorAll(".tabs button[data-view]").forEach(b=>b.addEventListener("click",()=>{ showGallery(false); setView(b.dataset.view); }));
+
+/* ---------- "תמונות לדיוור" tab: every image the design agent (AutoArt) makes ----------
+   The agent's render script adds each picture to data/gallery (index.json + the file + a small preview).
+   "Add" turns it into an ordinary uploaded-image block, so saving and Smoove treat it like any upload. */
+let gallery=[];
+function showGallery(on){
+  document.querySelector("main.wrap").hidden=on; $("galleryView").hidden=!on;
+  $("tab-gallery").setAttribute("aria-selected",String(on));
+  document.querySelectorAll(".tabs button[data-view]").forEach(b=>b.setAttribute("aria-selected",String(!on && b.dataset.view===view)));
+  if(on){ $("gTarget").value=view; loadGallery(); }
+}
+$("tab-gallery").addEventListener("click",()=>showGallery(true));
+async function loadGallery(){
+  try{ const r=await fetch("data/gallery/index.json",{cache:"no-store"}); gallery=r.ok ? (await r.json()).images||[] : []; }catch(e){ gallery=[]; }
+  renderGallery();
+}
+const gWhen = iso => new Intl.DateTimeFormat("he-IL",{day:"numeric",month:"numeric",year:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(iso));
+function renderGallery(){
+  const q=$("gSearch").value.trim(), list=gallery.filter(x=>!q || x.title.includes(q));
+  if(!list.length){ $("gGrid").innerHTML=`<p class="g-empty">${gallery.length ? "לא נמצאה תמונה בשם הזה." : "עוד אין כאן תמונות. כל תמונה שאוטוארט יוצר תופיע כאן לבד."}</p>`; return; }
+  $("gGrid").innerHTML=list.map(x=>`<figure class="g-card">
+    <a class="g-img" href="data/gallery/${esc(x.file)}" target="_blank" rel="noopener" title="פתיחה בגודל מלא"><img src="data/gallery/${esc(x.thumb)}" alt="${esc(x.title)}" loading="lazy"></a>
+    <figcaption><span class="g-title">${esc(x.title)}</span><span class="g-meta">${gWhen(x.created)} · <bdi dir="ltr">${x.w}×${x.h}</bdi></span>
+      ${x.h>x.w*1.5 ? '<span class="g-warn">תמונה גבוהה: בדיוור היא תיכנס לכל הרוחב ותהיה ארוכה מאוד.</span>' : ""}
+      <span class="actions"><button type="button" class="primary small" data-gadd="${esc(x.id)}">הוסף לדיוור</button><a class="hint" href="data/gallery/${esc(x.file)}" download="${esc(x.title)}.${x.file.split(".").pop()}">הורדה</a></span></figcaption></figure>`).join("");
+}
+$("gSearch").addEventListener("input",renderGallery);
+$("gGrid").addEventListener("click",async e=>{
+  const btn=e.target.closest("[data-gadd]"); if(!btn) return;
+  const x=gallery.find(g=>g.id===btn.dataset.gadd); if(!x) return;
+  btn.disabled=true;
+  try{
+    const r=await fetch("data/gallery/"+x.file); if(!r.ok) throw new Error(r.status);
+    const blob=await r.blob(), file=new File([blob],x.file,{type:blob.type||"image/png"});
+    const target=$("gTarget").value;
+    showGallery(false); setView(target);
+    cur().push({type:"upload",name:x.title.slice(0,60),f:{},src:stashUpload(file)});
+    openSet.add(cur().length-1); markDirty(); render(); setTimeout(()=>openBlock(cur().length-1));
+    setStatus(`"${x.title}" נוסף בסוף הדיוור. לא לשכוח "שמור שינויים"`,"ok");
+  }catch(err){ setStatus("לא הצלחתי לטעון את התמונה. נסו שוב בעוד רגע.","err"); }
+  finally{ btn.disabled=false; }
+});
 
 /* ---------- block list + editors ---------- */
 function openBlock(i){
