@@ -91,6 +91,32 @@ h2 { font-size: 32px; margin-bottom: 6px; }
 .m-foot { background: var(--night); color: var(--night-soft); text-align: center; font-size: 13px; padding: 16px; line-height: 1.6; }
 .m-foot a { color: var(--logo-a); }
 
+/* new content-grid mockup */
+.gm-head { background: var(--night); background-image: radial-gradient(300px circle at 0% 0%, rgba(42,127,184,.55), transparent 70%), radial-gradient(140px circle at 90% 100%, rgba(199,151,42,.22), transparent 70%); margin: 14px; border-radius: 16px; padding: 20px 22px; display: flex; gap: 16px; align-items: center; }
+.gm-head .ic { flex: none; width: 70px; height: 70px; border-radius: 16px; background: rgba(255,255,255,.06); border: 1px solid var(--night-line); display: grid; place-items: center; }
+.gm-head h3 { font-family: var(--f-head); color: #fff; font-size: 30px; line-height: 1.1; margin: 0; }
+.gm-head p { margin: 6px 0 0; color: var(--night-soft); font-size: 14px; }
+.gm-head p b { color: var(--sun); }
+.gm-text { padding: 10px 28px; color: var(--body-ink); font-size: 16px; line-height: 1.75; }
+.gm-text p { margin: 0 0 14px; }
+.gm-div { display: flex; align-items: center; gap: 10px; padding: 8px 40px 18px; }
+.gm-div i { flex: 1; height: 2px; background: var(--line); border-radius: 2px; }
+.gm-div b { width: 10px; height: 10px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 4px rgba(255,207,92,.25); }
+.gm-story { margin: 0 14px 14px; border-radius: 16px; background: #fff; border: 1.5px solid var(--navy); padding: 16px 22px; position: relative; }
+.gm-story .q { position: absolute; inset-inline-end: 18px; top: 4px; font-family: var(--f-head); font-size: 60px; color: var(--sun); line-height: 1; }
+.gm-pill { display: inline-block; font-weight: 700; font-size: 13px; border-radius: 999px; padding: 1px 12px; }
+.gm-story .gm-pill { background: var(--sun); color: var(--navy); }
+.gm-story h4, .gm-tip h4 { font-family: var(--f-head); font-weight: 400; font-size: 24px; margin: 6px 0 0; line-height: 1.15; }
+.gm-story h4 { color: var(--navy); }
+.gm-tip { margin: 0 14px 14px; border-radius: 16px; background: var(--navy); padding: 16px 22px; display: flex; align-items: center; gap: 18px; }
+.gm-tip .n { font-family: var(--f-head); font-size: 54px; color: var(--sun); line-height: 1; }
+.gm-tip .gm-pill { border: 1.5px solid var(--logo-a); color: var(--logo-a); }
+.gm-tip h4 { color: #fff; }
+.gm-foot { background: var(--night); text-align: center; padding: 20px 16px; border-top: 4px solid var(--sun); }
+.gm-foot .brand { justify-content: center; }
+.gm-foot .brand span { color: #fff; font-size: 18px; }
+.gm-foot p { color: var(--night-soft); font-size: 13px; margin: 6px 0 0; line-height: 1.6; }
+
 /* signatures */
 .sigs { display: grid; gap: 16px; }
 .sig { width: 100%; max-width: 600px; aspect-ratio: 600 / 140; border-radius: 12px; display: flex; align-items: center; gap: 18px; padding: 0 24px; border: 1px solid var(--line); }
@@ -179,8 +205,37 @@ footer { text-align: center; color: var(--soft); padding: 40px 0 50px; font-size
 </section>
 
 <section>
-  <h2>הדיוור: לפני ואחרי</h2>
-  <p class="lead">המבנה נשאר אותו מבנה (ראש, כותרת ראשית, שלבים, תובנה, כפתור, תחתית). רק הלבוש מתחלף: ראש בלילה, תוכן בבוקר, כמו באתר.</p>
+  <h2>גריד דיוור תוכן: לפני ואחרי</h2>
+  <p class="lead">זו הלשונית שממנה את מדוורת בעיקר. כל הבלוקים נשארים כמו שהם: כותרת, פסקה, מפריד, כרטיס מהשטח, כרטיס טיפ, כרטיס כלי, תמונת פוסט, כפתור ותחתית. משתנים רק הצבעים, הגופנים והקישוטים.</p>
+  <div class="ba">
+    <div><span class="tag old">היום</span><img src="assets/brand/old-grid.png" alt="גריד דיוור התוכן הנוכחי"></div>
+    <div><span class="tag new">ההצעה</span>
+      <div class="mail">
+        <div class="gm-head">
+          <div class="ic"><svg width="46" height="46" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="g7" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#g7)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg></div>
+          <div><h3>מי עוד לא שילם?</h3><p><b>גיליון 11</b> | אוטומציה שמרוויחה לך כסף</p></div>
+        </div>
+        <div class="gm-text">
+          <p>היי [[שם פרטי]],<br>חודש טוב ומבורך!</p>
+          <p>מייל זה נשלח אלייך כי נרשמת בעבר לקבלת ערכת הקסם לעסק רווחי יותר ממני, רויזי קוגל מ-AutoSuccess.</p>
+        </div>
+        <div class="gm-div"><i></i><b></b><i></i></div>
+        <div class="gm-story"><span class="q">”</span><span class="gm-pill">מהשטח</span><h4>השאלה שאכלה שעתיים בשבוע</h4></div>
+        <div class="gm-tip"><span class="n">01</span><div><span class="gm-pill">טיפ</span><h4>ציד הגנב השקט</h4></div></div>
+        <div class="gm-foot">
+          <div class="brand"><svg width="30" height="30" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="g8" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#g8)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg><span>AutoSuccess</span></div>
+          <p>אוטומציה שמרוויחה לך כסף<br>autosuccess.cc | info@autosuccess.cc | 058-3219356</p>
+        </div>
+      </div>
+      <p class="cap">שני כרטיסים בצבעים שונים כדי שיהיה קל להבדיל ביניהם: "מהשטח" לבן עם מסגרת כחולה כהה וציטוט צהוב, ו"טיפ" כחול כהה עם מספר צהוב. המפריד הוא קו עם נקודת שמש במקום הגל.</p>
+    </div>
+  </div>
+  <div class="note" style="margin-top:18px"><b>תמונות הפוסט:</b> האיורים שבתוך הדיוור (כמו "מי עוד לא שילם החודש?") צבועים היום באפרסק ותכלת. מהגיליון הבא כדאי לייצר אותם בצבעי האתר: כחול-לילה, צהוב ותכלת. את התמונות שכבר יצאו לא צריך לשנות.</div>
+</section>
+
+<section>
+  <h2>AutoSuccess Master: לפני ואחרי</h2>
+  <p class="lead">גם התבנית הראשית מתעדכנת, באותו קו בדיוק. המבנה נשאר אותו מבנה (ראש, כותרת ראשית, שלבים, תובנה, כפתור, תחתית). רק הלבוש מתחלף: ראש בלילה, תוכן בבוקר, כמו באתר.</p>
   <div class="ba">
     <div><span class="tag old">היום</span><img src="assets/brand/old-newsletter.png" alt="הדיוור הנוכחי"></div>
     <div><span class="tag new">ההצעה</span>
@@ -234,7 +289,8 @@ footer { text-align: center; color: var(--soft); padding: 40px 0 50px; font-size
   <h2>מה אני צריך שתאשרי</h2>
   <ol class="dec">
     <li><b>הצבעים והגופנים</b> כמו שהם למעלה, או תיקון.</li>
-    <li><b>ראש הדיוור כהה</b> (לילה, כמו ראש האתר) ותוכן לבן. החלופה: דיוור כולו לבן, עם צהוב וכחול-כהה בלבד.</li>
+    <li><b>ראש הדיוור כהה</b> (לילה, כמו ראש האתר) ותוכן לבן, בשתי התבניות. החלופה: דיוור כולו לבן, עם צהוב וכחול-כהה בלבד.</li>
+    <li><b>כרטיסי הגריד:</b> "מהשטח" לבן עם מסגרת, ו"טיפ" כחול כהה.</li>
     <li><b>הלוגו:</b> המילה AutoSuccess בגופן של האתר ושורת הסלוגן מתחת. האם להשאיר את הסלוגן "אוטומציה שמרוויחה לך כסף"?</li>
     <li><b>החתימות:</b> כהה ובהירה כמו בהצעה.</li>
   </ol>
