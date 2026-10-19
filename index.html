@@ -169,6 +169,12 @@ ol.blocks .btns{display:flex;flex-wrap:wrap;gap:4px}
 
     <div class="panel">
       <h2>עיצוב</h2>
+      <div id="dStyleWrap" style="display:grid;gap:6px">
+        <label for="dStyle">סגנון הלשונית הזו
+          <select id="dStyle"><option value="balanced">מאוזן (כמו האתר)</option><option value="classic">קלאסי (כמו עד היום)</option></select>
+        </label>
+        <p class="hint" id="dStyleHint" hidden>בסגנון "מאוזן" הפונטים והצבעים קבועים לפי האתר. לשינוי ידני חוזרים ל"קלאסי". הטקסטים והתמונות לא משתנים.</p>
+      </div>
       <div class="row">
         <label for="font">פונט (לכל הדיוור)
           <select id="font">
@@ -330,6 +336,19 @@ const DEFAULT = {
   designs: { master:{blocks:ORDER.map(t=>newBlock(t))}, grid:{blocks:GRID_START()} }
 };
 const BRAND = {brand:"#4a9fd1",ink:"#12384f",pill:"#f4c7a6",soft:"#ddf3fa"};
+/* Style per tab: "classic" = the font and colours chosen in the panel (as before); "balanced" = the site's look
+   (autosuccess.cc, 2026 redesign): navy header bar, Alef text, Suez One headings, yellow button. Only the grid tabs
+   offer it for now. The content (texts, photos, blocks) never depends on the style. */
+const BALANCED = {brand:"#1f3a5f",ink:"#1f3a5f",text:"#34445a",pill:"#ffcf5c",soft:"#e8f5fb",font:"Alef",decor:false,
+  headBg:"#1f3a5f",headInk:"#ffffff",headSub:"#c9d6e6",storyStroke:"#dde3ec",quote:"#3f8cd2",btn:"#ffcf5c",btnInk:"#1f3a5f",
+  line:"#dde3ec",dot:"#ffcf5c",footBg:"#f2f5f9",footLine:"#1f3a5f",tipNum:"#1f3a5f"};
+const HEAD_FONT = "Suez One";
+const styleOf = (v=view) => designOf(v)==="grid" && state.designs?.[v]?.style==="balanced" ? "balanced" : "classic";
+const BAL = () => styleOf()==="balanced";
+// the theme the grid renderers and email builders read: classic maps every role to the panel colours, exactly as before
+function TB(){ const b=state.banner;
+  return BAL() ? {...b,...BALANCED}
+    : {...b,text:b.ink,headBg:b.soft,headInk:b.ink,headSub:b.ink,storyStroke:b.brand,quote:b.brand,btn:b.brand,btnInk:"#ffffff",line:b.brand,dot:null,footBg:b.soft,footLine:b.pill,tipNum:b.brand}; }
 const FIELDS = ["issue","date","dateFormat","customDate","title","slogan","font","brand","ink","pill","soft","decor"];
 const PAGE_BG="#f8fafb", MUTED="#6b8597", S=2;
 const $ = id => document.getElementById(id);
@@ -372,7 +391,7 @@ function fitFont(ctx, text, weight, size, family, maxW){
    blk.st[key] = {font, size} (size = % of the design size), state.banner.st likewise for title/slogan.
    styled() hands those fields to the renderers and email builders as String objects carrying .font/.scale,
    so every block picks them up without knowing about styles; composed text (templates) keeps the shared font. */
-const FONTS = ["Arimo","Heebo","Rubik","Assistant"];
+const FONTS = ["Arimo","Heebo","Rubik","Assistant","Alef","Suez One"];
 function styled(f,st){
   if(!st) return f;
   const o={...f};
@@ -381,12 +400,14 @@ function styled(f,st){
   return o;
 }
 const restyle = (from,v) => { if(!(from instanceof String)) return v; const w=new String(v); w.font=from.font; w.scale=from.scale; return w; };
-const tFont = t => FONTS.includes(t?.font) ? t.font : state.banner.font;
+const tFont = t => FONTS.includes(t?.font) ? t.font : TB().font;
 const tSize = (t,size) => Math.round(size*(t?.scale||1)*10)/10;
 
 /* ---------- drawing primitives (600px units, drawn at 2x) ---------- */
-const fontCss = (w,size,fam=state.banner.font) => `${w} ${size*S}px "${fam}", Arial, sans-serif`;
-const tFontCss = (t,w,size) => fontCss(w,tSize(t,size),tFont(t));   // canvas font of one (maybe styled) text
+const fontCss = (w,size,fam=TB().font) => `${w} ${size*S}px "${fam}", Arial, sans-serif`;
+// canvas font of one (maybe styled) text; in "balanced" a bold text of 18px and up is a heading, set in Suez One (it has one weight)
+const isHead = (t,w,size) => BAL() && w>=700 && size>=18 && !FONTS.includes(t?.font);
+const tFontCss = (t,w,size) => isHead(t,w,size) ? fontCss(400,tSize(t,size),HEAD_FONT) : fontCss(w,tSize(t,size),tFont(t));
 function rect(ctx,x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x*S,y*S,w*S,h*S,r*S);ctx.fill();}
 function dot(ctx,cx,cy,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.arc(cx*S,cy*S,r*S,0,Math.PI*2);ctx.fill();}
 function wrapLines(ctx,text,maxW){
@@ -441,7 +462,7 @@ function gcard(ctx,f,fill,stroke,photo,pos){
   const ph=side?0:belowH(photo,520), T=H+(ph?ph+20:0);
   rect(ctx,20,10,560,T,14,fill);
   if(stroke){ ctx.save(); ctx.strokeStyle=stroke; ctx.lineWidth=2*S; ctx.beginPath(); ctx.roundRect(21*S,11*S,558*S,(T-2)*S,13*S); ctx.stroke(); ctx.restore(); }
-  text(ctx,{t:f.title,x:tx,y:60+dy,w:tw,size:26,weight:700,color:state.banner.ink});
+  text(ctx,{t:f.title,x:tx,y:60+dy,w:tw,size:26,weight:700,color:TB().ink});
   if(sh) roundPhoto(ctx,photo,40,10+(H-sh)/2,GSIDE,sh);
   if(ph) roundPhoto(ctx,photo,40,10+H,520,ph);
   return {H,T,dy};
@@ -565,33 +586,33 @@ const R = {
   },
   /* ----- "גריד דיוור תוכן" ----- */
   async gheader(ctx,f){
-    const b=state.banner, icon=await loadImg("assets/grid-icon.png");
+    const b=TB(), icon=await loadImg("assets/grid-icon.png");
     const off=document.createElement("canvas").getContext("2d");
     const th=text(off,{t:f.title,x:65,y:0,w:380,size:30,weight:700});
     const subTop=50+Math.max(th,34.8)+12.7, sub=restyle(f.subtitle,(f.subtitle||"").replaceAll("{גיליון}",b.issue));
     const sh=text(off,{t:sub,x:65,y:0,w:380,size:14});
     const H=Math.max(150, subTop+sh-15+50.8);
-    rect(ctx,20,15,560,H,18,b.soft);
+    rect(ctx,20,15,560,H,18,b.headBg);
     if(b.decor) wave(ctx,40,15+H-57.5,0.5,"M0,70 C60,70 90,10 160,10 C230,10 260,70 320,70",6,b.brand,0.45);
     rect(ctx,467.5,15+H/2-47.5,95,95,16,"#ffffff");
     blend(ctx,icon,475,15+H/2-40,80,79);
-    text(ctx,{t:f.title,x:65,y:50,w:380,size:30,weight:700,color:b.ink});
-    text(ctx,{t:sub,x:65,y:subTop,w:380,size:14,color:b.ink});
+    text(ctx,{t:f.title,x:65,y:50,w:380,size:30,weight:700,color:b.headInk});
+    text(ctx,{t:sub,x:65,y:subTop,w:380,size:14,color:b.headSub});
     return 15+H+15;
   },
   async gpara(ctx,f){
-    const h=text(ctx,{t:f.text,x:40,y:20,w:520,size:16,color:state.banner.ink,lh:1.6});
+    const h=text(ctx,{t:f.text,x:40,y:20,w:520,size:16,color:TB().text,lh:1.6});
     return 20+h+20;
   },
   async gtip(ctx,f,blk){
-    const b=state.banner, photo=blk.cphoto? await loadImg(blk.cphoto).catch(()=>null) : null;
+    const b=TB(), photo=blk.cphoto? await loadImg(blk.cphoto).catch(()=>null) : null;
     const {H,T,dy}=gcard(ctx,f,b.soft,null,photo,cardPos(blk));
     pill(ctx,f.tag,b.ink,"#ffffff",dy);
-    text(ctx,{t:f.num,x:475,y:10+H/2-36,w:85,size:60,weight:700,color:b.brand,align:"center",lh:1.2});
+    text(ctx,{t:f.num,x:475,y:10+H/2-36,w:85,size:60,weight:700,color:b.tipNum,align:"center",lh:1.2});
     return 10+T+10;
   },
   async gtool(ctx,f,blk){
-    const b=state.banner, logo=blk.photo? await loadImg(blk.photo).catch(()=>null) : null;
+    const b=TB(), logo=blk.photo? await loadImg(blk.photo).catch(()=>null) : null;
     const photo=blk.cphoto? await loadImg(blk.cphoto).catch(()=>null) : null;
     const {H,T,dy}=gcard(ctx,f,b.soft,null,photo,cardPos(blk));
     pill(ctx,f.tag,"#ffffff",b.ink,dy);
@@ -603,32 +624,33 @@ const R = {
     return 10+T+10;
   },
   async gstory(ctx,f,blk){
-    const b=state.banner, photo=blk.cphoto? await loadImg(blk.cphoto).catch(()=>null) : null;
-    const {H,T,dy}=gcard(ctx,f,"#ffffff",b.brand,photo,cardPos(blk));
+    const b=TB(), photo=blk.cphoto? await loadImg(blk.cphoto).catch(()=>null) : null;
+    const {H,T,dy}=gcard(ctx,f,"#ffffff",b.storyStroke,photo,cardPos(blk));
     pill(ctx,f.tag,b.pill,b.ink,dy);
-    text(ctx,{t:"”",x:480,y:10+H/2-45,w:75,size:110,weight:700,color:b.brand,align:"center",lh:1});
+    text(ctx,{t:"”",x:480,y:10+H/2-45,w:75,size:110,weight:700,color:b.quote,align:"center",lh:1});
     return 10+T+10;
   },
   async gdivider(ctx){
-    const b=state.banner;
+    const b=TB();
     // spacing as in the Canva sample: the divider sits 64px (1200 scale) under the paragraph above it
-    ctx.save(); ctx.globalAlpha=0.35; rect(ctx,70,44,180,2,1,b.brand); rect(ctx,350,44,180,2,1,b.brand); ctx.restore();
+    if(b.dot){ rect(ctx,70,44,212,2,1,b.line); rect(ctx,318,44,212,2,1,b.line); dot(ctx,300,45,10,"rgba(255,207,92,.3)"); dot(ctx,300,45,5.5,b.dot); return 75; }
+    ctx.save(); ctx.globalAlpha=0.35; rect(ctx,70,44,180,2,1,b.line); rect(ctx,350,44,180,2,1,b.line); ctx.restore();
     if(b.decor) wave(ctx,260,30,0.5,"M0,30 C30,30 45,6 80,6 C115,6 130,30 160,30",5,b.brand,1);
     return 75;
   },
   async gcta(ctx,f){
-    const b=state.banner;
+    const b=TB();
     ctx.font=tFontCss(f.button,700,21); const bw=Math.min(560,Math.max(280,ctx.measureText(f.button||"").width/S+60));
     const bh=text(document.createElement("canvas").getContext("2d"),{t:f.button,x:0,y:0,w:bw-40,size:21,weight:700});
     const H=Math.max(55,bh+30.6);
-    rect(ctx,300-bw/2,22.5,bw,H,27.5,b.brand);
-    text(ctx,{t:f.button,x:300-bw/2+20,y:22.5+(H-bh)/2,w:bw-40,size:21,weight:700,color:"#ffffff",align:"center"});
+    rect(ctx,300-bw/2,22.5,bw,H,27.5,b.btn);
+    text(ctx,{t:f.button,x:300-bw/2+20,y:22.5+(H-bh)/2,w:bw-40,size:21,weight:700,color:b.btnInk,align:"center"});
     return 22.5+H+22.5;
   },
   async gfooter(ctx,f){
-    const b=state.banner, icon=await loadImg("assets/grid-icon.png");
-    rect(ctx,0,0,600,1000,0,b.soft);
-    rect(ctx,0,0,600,4,0,b.pill);
+    const b=TB(), icon=await loadImg("assets/grid-icon.png");
+    rect(ctx,0,0,600,1000,0,b.footBg);
+    rect(ctx,0,0,600,4,0,b.footLine);
     rect(ctx,271.5,11,57,57,12,"#ffffff");
     blend(ctx,icon,277.5,17.5,45,44);
     let y=74;
@@ -713,7 +735,7 @@ function setView(v){
   document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.view===v)));
   const m=v==="master"; $("pxRules").hidden = v!=="gridcode";
   $("bannerFields").hidden=!m; $("bannerPreview").hidden=!m; $("dlBanner").hidden=!m; $("pillWrap").hidden=!m;
-  openSet.clear(); fillAddTypes(); render();
+  openSet.clear(); fillAddTypes(); syncStyle(); render();
   if(!smSubjectTouched && !$("smReady").hidden) $("smSubject").value=defaultSubject();
   smShowLast();
 }
@@ -932,7 +954,7 @@ function pixelTable(src,W,H,cell,tol=24){
   const d=x.getImageData(0,0,cw,ch).data, hex=(r,g,b)=>"#"+[r,g,b].map(v=>Math.min(255,Math.round(v/8)*8).toString(16).padStart(2,"0")).join("");   // 32 shades a channel: longer runs, lighter mail
   const pg=[1,3,5].map(i=>parseInt(PAGE_BG.slice(i,i+2),16));
   // half-see-through pixels (soft edges, the faded header wave) are blended onto the card colour the grid's small pictures sit on
-  const un=[1,3,5].map(i=>parseInt(state.banner.soft.slice(i,i+2),16));
+  const un=[1,3,5].map(i=>parseInt(TB().soft.slice(i,i+2),16));
   for(let o=0;o<d.length;o+=4){ const a=d[o+3]/255; if(a<0.1){ d[o+3]=0; continue; } if(a<1){ for(let k=0;k<3;k++) d[o+k]=Math.round(d[o+k]*a+un[k]*(1-a)); d[o+3]=255; } }
   if(W>=600) for(let o=0;o<d.length;o+=4) if(Math.abs(d[o]-pg[0])+Math.abs(d[o+1]-pg[1])+Math.abs(d[o+2]-pg[2])<=6) d[o+3]=0;
   const rows=[];
@@ -959,7 +981,9 @@ function pxImage(c,w,h,style){
 const img = (url,w,h,alt="",style="") => String(url).startsWith("px:") ? pxImage(pxCanvases[+url.slice(3)],w,h,style) : `<img src="${url}" width="${w}" height="${h}" alt="${esc(alt)}" style="display:block;width:${w}px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;${style}">`;
 function P(text,{size=16,weight=400,color,lh=1.5,align="right",mt=0,extra=""}={}){
   if(!String(text??"").trim()) return "";
-  return `<p style="margin:${mt}px 0 0;font-family:${FONT(text)};font-size:${tSize(text,size)}px;line-height:${lh};font-weight:${weight};color:${color||state.banner.ink};text-align:${align};${extra}">${escBr(text)}</p>`;
+  // a "balanced" heading asks for Suez One but stays bold, so clients without web fonts (Gmail) show bold Arial; no faux bold on Suez
+  const head=isHead(text,weight,size), fam=head?`'${HEAD_FONT}',${FONT(text)}`:FONT(text);
+  return `<p style="margin:${mt}px 0 0;font-family:${fam};font-size:${tSize(text,size)}px;line-height:${lh};font-weight:${weight};${head?"font-synthesis:none;":""}color:${color||(weight>=700?TB().ink:TB().text)};text-align:${align};${extra}">${escBr(text)}</p>`;
 }
 const pillH = (label,bg,fg,size=13,h=23) => String(label??"").trim()
   ? `<span style="display:inline-block;background:${bg};color:${fg};font-family:${FONT(label)};font-size:${tSize(label,size)}px;font-weight:bold;line-height:${tSize(label,h)}px;padding:0 ${Math.round(h*0.6)}px;border-radius:${tSize(label,h)/2}px">${esc(label)}</span>` : "";
@@ -968,9 +992,9 @@ const card = (inner,{bg,radius,pad,border=""}) =>
   `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;background:${bg};border-radius:${radius}px;${border}"><tr><td dir="rtl" style="padding:${pad};text-align:right">${inner}</td></tr></table>`;
 // columns, right to left; each cell: [html, style]
 const cols = cells => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl"><tr>${cells.map(([h,st])=>`<td dir="rtl" style="${st}">${h}</td>`).join("")}</tr></table>`;
-const button = (text,link,size) => { const b=state.banner;
-  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td align="center" bgcolor="${b.brand}" style="border-radius:28px;background:${b.brand}">`+
-    `<a href="${esc(safeUrl(link))}" target="_blank" style="display:inline-block;padding:16px 36px;font-family:${FONT(text)};font-size:${tSize(text,size)}px;font-weight:bold;line-height:1.3;color:#ffffff;text-decoration:none;border-radius:28px">${esc(text)}</a></td></tr></table>`; };
+const button = (text,link,size) => { const b=TB();
+  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td align="center" bgcolor="${b.btn}" style="border-radius:28px;background:${b.btn}">`+
+    `<a href="${esc(safeUrl(link))}" target="_blank" style="display:inline-block;padding:16px 36px;font-family:${FONT(text)};font-size:${tSize(text,size)}px;font-weight:bold;line-height:1.3;color:${b.btnInk};text-decoration:none;border-radius:28px">${esc(text)}</a></td></tr></table>`; };
 
 // the optional photo inside a card: a cell to the left of the text ("side"), or a row under it ("below", w = card's inner width)
 async function cardImg(blk,f,side,w){
@@ -1022,34 +1046,34 @@ const MAIL = {
       P(f.tagline,{size:16,weight:700,lh:1.4,align:"center"})+P(f.links,{size:12,color:MUTED,align:"center",mt:8})+`<div style="margin-top:20px">${line}</div>`,"20px 24px 46px"); },
 
   /* ----- "גריד דיוור תוכן" ----- */
-  async gheader(f){ const b=state.banner;
+  async gheader(f){ const b=TB();
     // the newsletter agent's header image, already on the CRM domain (approved in NetFree): used as is, never re-uploaded
     const himg = /^https:\/\/app\.autosuccess\.cc\/nl-img\/[\w.-]+\.png$/.test(f.himg||"") ? tr(img(f.himg,600,220,f.title)) : "";
     const deco = b.decor ? `<div style="text-align:left;margin-top:6px">${img(await art(160,40,ctx=>wave(ctx,0,0,0.5,"M0,70 C60,70 90,10 160,10 C230,10 260,70 320,70",6,b.brand,0.45)),160,40,"","display:inline-block")}</div>` : "";
     return himg + tr(card(cols([[img(await iconBox(95,16,7.5),95,95,"AutoSuccess"),"width:95px;vertical-align:middle"],["","width:22px"],
-      [P(f.title,{size:30,weight:700,lh:1.2})+P(restyle(f.subtitle,(f.subtitle||"").replaceAll("{גיליון}",b.issue)),{size:14,lh:1.4,mt:10})+deco,"vertical-align:middle"]]),
-      {bg:b.soft,radius:18,pad:"26px 17px 10px 20px"}),"15px 20px"); },
+      [P(f.title,{size:30,weight:700,lh:1.2,color:b.headInk})+P(restyle(f.subtitle,(f.subtitle||"").replaceAll("{גיליון}",b.issue)),{size:14,lh:1.4,mt:10,color:b.headSub})+deco,"vertical-align:middle"]]),
+      {bg:b.headBg,radius:18,pad:"26px 17px 10px 20px"}),"15px 20px"); },
   async gpara(f){ return tr(P(f.text,{size:16,lh:1.6}),"20px 40px"); },
-  async gtip(f,blk){ const b=state.banner;
-    return tr(card(cols([[P(f.num,{size:60,weight:700,lh:1,color:b.brand,align:"center"}),"width:85px;vertical-align:middle"],["","width:10px"],
+  async gtip(f,blk){ const b=TB();
+    return tr(card(cols([[P(f.num,{size:60,weight:700,lh:1,color:b.tipNum,align:"center"}),"width:85px;vertical-align:middle"],["","width:10px"],
       [pillH(f.tag,b.ink,"#ffffff")+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"],...await sideCells(blk,f,GSIDE)])+await belowRow(blk,f,520),{bg:b.soft,radius:14,pad:"22px 20px"}),"10px 20px"); },
-  async gtool(f,blk){ const b=state.banner;
+  async gtool(f,blk){ const b=TB();
     let logo;
     if(blk.photo){ const l=await loadImg(blk.photo); logo=img(await art(75,75,ctx=>{ rect(ctx,0,0,75,75,14,"#ffffff");
         const r=Math.min(61/l.naturalWidth,61/l.naturalHeight), w=l.naturalWidth*r, h=l.naturalHeight*r; ctx.drawImage(l,(37.5-w/2)*S,(37.5-h/2)*S,w*S,h*S); }),75,75,f.title); }
     else logo=`<div style="width:75px;height:75px;line-height:75px;border-radius:14px;background:#ffffff;color:#9ca3af;font-family:${FONT(f.logoText)};font-size:${tSize(f.logoText,11)}px;text-align:center">${esc(f.logoText)}</div>`;
     return tr(card(cols([[logo,"width:75px;vertical-align:middle"],["","width:15px"],
       [pillH(f.tag,"#ffffff",b.ink)+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"],...await sideCells(blk,f,GSIDE)])+await belowRow(blk,f,520),{bg:b.soft,radius:14,pad:"22px 20px"}),"10px 20px"); },
-  async gstory(f,blk){ const b=state.banner;
-    return tr(card(cols([[P("”",{size:110,weight:700,lh:0.75,color:b.brand,align:"center",extra:"height:60px;overflow:hidden"}),"width:75px;vertical-align:middle"],["","width:15px"],
+  async gstory(f,blk){ const b=TB();
+    return tr(card(cols([[P("”",{size:110,weight:700,lh:0.75,color:b.quote,align:"center",extra:"height:60px;overflow:hidden"}),"width:75px;vertical-align:middle"],["","width:15px"],
       [pillH(f.tag,b.pill,b.ink)+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"],...await sideCells(blk,f,GSIDE)])+await belowRow(blk,f,520),
-      {bg:"#ffffff",radius:14,pad:"20px 18px",border:`border:2px solid ${b.brand};`}),"10px 20px"); },
+      {bg:"#ffffff",radius:14,pad:"20px 18px",border:`border:2px solid ${b.storyStroke};`}),"10px 20px"); },
   async gdivider(){ const c=await renderBlock({type:"gdivider",f:{}}); pubProgress(`מעלה תמונות (${++pubCount})…`);
     return tr(img(await publishImage(c),600,75,"")); },
   async gcta(f){ return tr(button(f.button,f.link,21),"22px 24px","text-align:center;"); },
-  async gfooter(f){ const b=state.banner, site=String(f.url||"").trim();
+  async gfooter(f){ const b=TB(), site=String(f.url||"").trim();
     const url = site ? `<a href="${esc(safeUrl(/^https?:/i.test(site)?site:"https://"+site))}" target="_blank" style="color:${b.ink};text-decoration:none">${esc(site)}</a>` : "";
-    return `<tr><td dir="rtl" bgcolor="${b.soft}" style="background:${b.soft};border-top:4px solid ${b.pill};padding:7px 20px 22px;text-align:center">`+
+    return `<tr><td dir="rtl" bgcolor="${b.footBg}" style="background:${b.footBg};border-top:4px solid ${b.footLine};padding:7px 20px 22px;text-align:center">`+
       img(await iconBox(57,12,6),57,57,"AutoSuccess","margin:0 auto")+P(f.name,{size:17,weight:700,lh:1.4,align:"center",mt:6})+
       P(f.tagline,{size:13,lh:1.4,align:"center",mt:4})+(url?`<p style="margin:6px 0 0;font-family:${FONT(f.url)};font-size:${tSize(f.url,12)}px;line-height:1.4;text-align:center;opacity:.75">${url}</p>`:"")+`</td></tr>`; },
   async upload(f,blk){ const c=await renderBlock(blk); pubProgress(`מעלה תמונות (${++pubCount})…`); return tr(img(await publishImage(c),600,Math.round(c.height/S),blk.name)); }
@@ -1058,7 +1082,7 @@ const MAIL = {
 async function fontFaceCss(){
   try{
     const css=await (await fetch("fonts/fonts.css")).text();
-    const used=new Set([state.banner.font, ...[state.banner,...cur()].flatMap(b=>Object.values(b.st||{}).map(s=>s.font)).filter(Boolean)]);
+    const used=new Set([TB().font, ...(BAL()?[HEAD_FONT]:[]), ...[state.banner,...cur()].flatMap(b=>Object.values(b.st||{}).map(s=>s.font)).filter(Boolean)]);
     return (css.match(/@font-face\s*\{[^}]*\}/g)||[]).filter(r=>[...used].some(f=>r.includes(`'${f}'`)))
       .map(r=>r.replace(/url\(([^)]+)\)/, (m,u)=>`url(${FONT_BASE}${u.replace(/^.*\//,"")})`)).join("\n");
   }catch(e){ return ""; }
@@ -1209,6 +1233,12 @@ function bannerStyleRows(){
     host.after(styleRow(state.banner,key,label,$(key)));
   }
 }
+function syncStyle(){
+  $("dStyleWrap").hidden = designOf(view)!=="grid";
+  $("dStyle").value=styleOf(); const bal=BAL(); $("dStyleHint").hidden=!bal;
+  for(const id of ["font","decor","brand","ink","pill","soft","resetColors"]) $(id).disabled=bal;
+}
+$("dStyle").addEventListener("change",()=>{ state.designs[view].style=$("dStyle").value; syncStyle(); markDirty(); schedule(); });
 $("resetColors").addEventListener("click",()=>{Object.assign(state.banner,BRAND);fillForm();markDirty();schedule();});
 
 // state saved by the first version of the editor held flat images (blocks/NN-*.png); turn those into live blocks
@@ -1231,6 +1261,7 @@ function migrate(s){
               grid:  {blocks: d.grid?.blocks   ? fixBlocks(d.grid.blocks)   : GRID_START()} };
   // the "images as code" tab starts as a copy of the grid issue, then is edited on its own
   s.designs.gridcode={blocks: d.gridcode?.blocks ? fixBlocks(d.gridcode.blocks) : structuredClone(s.designs.grid.blocks)};
+  for(const k of ["grid","gridcode"]) if(d[k]?.style==="balanced") s.designs[k].style="balanced";
   return s;
 }
 
