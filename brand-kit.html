@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ערכת המותג AutoSuccess</title>
+<style>
+@font-face { font-family: "Suez One"; src: url(fonts/suez-one-hebrew-400-normal.woff2) format("woff2"); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+@font-face { font-family: "Suez One"; src: url(fonts/suez-one-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: "Alef"; font-weight: 400; src: url(fonts/alef-hebrew-400-normal.woff2) format("woff2"); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+@font-face { font-family: "Alef"; font-weight: 700; src: url(fonts/alef-hebrew-700-normal.woff2) format("woff2"); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+@font-face { font-family: "Alef"; font-weight: 400; src: url(fonts/alef-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: "Alef"; font-weight: 700; src: url(fonts/alef-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+:root { --navy: #1f3a5f; --sun: #ffcf5c; --mist: #f2f5f9; --line: #dde3ec; --soft: #56657a; --ink: #34445a; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--mist); color: var(--ink); font: 17px/1.7 "Alef", Arial, sans-serif; padding: 0 16px 60px; }
+.wrap { max-width: 900px; margin: 0 auto; }
+header { background: var(--navy); color: #fff; margin: 0 -16px 28px; padding: 36px 16px; }
+header .wrap h1 { font-family: "Suez One", serif; font-weight: 400; font-size: 34px; margin: 0; }
+header p { margin: 8px 0 0; color: #c9d6e6; }
+h2 { font-family: "Suez One", serif; font-weight: 400; color: var(--navy); font-size: 26px; margin: 34px 0 6px; }
+.lead { color: var(--soft); margin: 0 0 16px; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.colors { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.sw { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.sw i { display: block; height: 70px; }
+.sw div { padding: 8px 12px 12px; }
+.sw b { display: block; color: var(--navy); }
+.sw button { margin-top: 6px; font: 700 14px "Alef", Arial; direction: ltr; background: var(--mist); border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; cursor: pointer; color: var(--navy); }
+.sw button.ok { background: #e6f4ec; border-color: #2e9d62; }
+.fonts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.f1 { font-family: "Suez One", serif; font-size: 34px; color: var(--navy); line-height: 1.2; }
+.f2 { font-family: "Alef", Arial; font-size: 24px; font-weight: 700; color: var(--navy); }
+.logos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.lg { border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #fff; }
+.lg .pic { height: 190px; display: grid; place-items: center; padding: 16px; }
+.lg .pic img { max-height: 160px; max-width: 100%; }
+.lg.dark .pic { background: var(--navy); }
+.lg .cap { padding: 10px 14px 14px; }
+.lg .cap b { color: var(--navy); display: block; }
+.btn { display: inline-block; text-decoration: none; font-weight: 700; border-radius: 10px; padding: 8px 16px; background: var(--sun); color: var(--navy); margin-top: 6px; }
+ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+ol.steps li { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 14px 16px; padding-inline-start: 58px; position: relative; }
+ol.steps li::before { counter-increment: s; content: counter(s); position: absolute; inset-inline-start: 14px; top: 14px; width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: var(--sun); display: grid; place-items: center; font-family: "Suez One", serif; }
+ol.steps b { color: var(--navy); }
+.note { background: #fff8e1; border: 1px solid #f3dd98; border-radius: 12px; padding: 14px 16px; margin-top: 14px; }
+@media (max-width: 700px) { .fonts, .logos { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>ערכת המותג של AutoSuccess</h1><p>כל מה שצריך כדי ליצור את ערכת המותג בקנבה: צבעים להעתקה, גופנים ולוגואים להורדה, והוראות צעד אחרי צעד.</p></div></header>
+<main class="wrap">
+
+<h2>הצבעים</h2>
+<p class="lead">לוחצים על הקוד, והוא מועתק. בקנבה מדביקים אותו בחלון הוספת הצבע.</p>
+<div class="colors" id="colors"></div>
+
+<h2>הגופנים</h2>
+<p class="lead">שני הגופנים קיימים בקנבה. לא צריך להעלות קבצים, רק לבחור אותם מהרשימה.</p>
+<div class="fonts">
+  <div class="card"><div class="f1">Suez One</div><p class="lead" style="margin:6px 0 0">לכותרות בלבד: כותרת ראשית, כותרות משנה, שם בחתימה.</p></div>
+  <div class="card"><div class="f2">Alef</div><p class="lead" style="margin:6px 0 0">לכל השאר: טקסט רץ, כפתורים, תגיות, פרטים קטנים.</p></div>
+</div>
+
+<h2>הלוגו</h2>
+<p class="lead">שלוש גרסאות, כולן מהלוגו המקורי ועם רקע שקוף. לוחצים "הורדה" והקובץ יורד למחשב.</p>
+<div class="logos">
+  <div class="lg"><div class="pic"><img src="assets/brand/logo/autosuccess-logo-light.png" alt="לוגו לרקע בהיר"></div><div class="cap"><b>לרקע בהיר</b>כמו היום: טקסט שחור.<br><a class="btn" href="assets/brand/logo/autosuccess-logo-light.png" download="AutoSuccess-לוגו-לרקע-בהיר.png">הורדה</a></div></div>
+  <div class="lg dark"><div class="pic"><img src="assets/brand/logo/autosuccess-logo-dark.png" alt="לוגו לרקע כהה"></div><div class="cap"><b>לרקע כהה</b>אותו לוגו, הטקסט בלבן.<br><a class="btn" href="assets/brand/logo/autosuccess-logo-dark.png" download="AutoSuccess-לוגו-לרקע-כהה.png">הורדה</a></div></div>
+  <div class="lg"><div class="pic"><img src="assets/brand/logo/autosuccess-icon.png" alt="סמל בלבד"></div><div class="cap"><b>סמל בלבד</b>לאייקון, תמונת פרופיל, כותרת דיוור.<br><a class="btn" href="assets/brand/logo/autosuccess-icon.png" download="AutoSuccess-סמל.png">הורדה</a></div></div>
+</div>
+
+<h2>איך יוצרים את ערכת המותג בקנבה</h2>
+<p class="lead">בערך 3 דקות. כדאי לפתוח את הדף הזה בחלון אחד ואת קנבה בחלון שני.</p>
+<ol class="steps">
+  <li><b>מורידים את שלושת הלוגואים</b> מהכפתורים למעלה.</li>
+  <li><b>נכנסים לקנבה</b>, ובתפריט הצדדי לוחצים על <b>"מותג"</b> (Brand).</li>
+  <li>לוחצים על <b>"הוספה"</b> או <b>"ערכת מותג חדשה"</b>, וקוראים לה <b>AutoSuccess 2026</b>.</li>
+  <li><b>לוגואים:</b> לוחצים על "הוספת לוגו" ומעלים את שלושת הקבצים.</li>
+  <li><b>צבעים:</b> לוחצים על "הוספת צבעים". לכל צבע לוחצים על הקוד בדף הזה כדי להעתיק, ומדביקים בקנבה. אפשר לקרוא לפלטה "מאוזן".</li>
+  <li><b>גופנים:</b> בחלק של הגופנים בוחרים <b>Suez One</b> לכותרת, ו-<b>Alef</b> לכותרת משנה ולגוף הטקסט.</li>
+  <li>זהו. מעכשיו, בכל עיצוב חדש בקנבה, הצבעים, הגופנים והלוגואים יופיעו לך בצד, תחת "מותג".</li>
+</ol>
+<div class="note">אם הכפתור בקנבה נקרא אצלך קצת אחרת, זה בגלל שקנבה מחליפה שמות מדי פעם. הסדר תמיד אותו סדר: מותג, ערכה חדשה, לוגואים, צבעים, גופנים.</div>
+
+</main>
+<script>
+const C=[["כחול כהה (כותרות)","#1F3A5F"],["שמש (כפתור)","#FFCF5C"],["תכלת (כרטיסים)","#E8F5FB"],["גל ולוגו","#4A9FD1"],["טקסט רץ","#34445A"],["רקע","#F8FAFB"],["לבן","#FFFFFF"],["תכלת הלוגו","#6CCBE8"]];
+const box=document.getElementById("colors");
+for(const [n,h] of C){ const d=document.createElement("div"); d.className="sw";
+  d.innerHTML=`<i style="background:${h};${h==="#FFFFFF"||h==="#F8FAFB"?"border-bottom:1px solid #dde3ec":""}"></i><div><b>${n}</b><button type="button">${h}</button></div>`;
+  const b=d.querySelector("button"); b.onclick=async()=>{ try{ await navigator.clipboard.writeText(h); }catch(e){ const t=document.createElement("textarea"); t.value=h; document.body.append(t); t.select(); document.execCommand("copy"); t.remove(); }
+    b.classList.add("ok"); b.textContent="הועתק ✓"; setTimeout(()=>{b.classList.remove("ok"); b.textContent=h;},1500); };
+  box.append(d); }
+</script>
+</body>
+</html>
