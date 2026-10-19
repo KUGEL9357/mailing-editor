@@ -201,9 +201,11 @@ const STYLES={
   shine:{len:4.5, at(t){ return {shine:t<1.6? t/1.6 : null}; }}
 };
 
+// ?v2 = the name "רויזי קוגל" in the site heading font (Suez One); without it, the original signature.
+const NAME_V2=new URLSearchParams(location.search).has("v2");
 const STATE={};
 async function load(v){
-  const img=new Image(); img.src=`assets/signature/${v}.png?v=20261018`; await img.decode(); measure(img);
+  const img=new Image(); img.src=`assets/signature/${v}${NAME_V2?"-v2":""}.png?v=20261019`; await img.decode(); measure(img);
   STATE[v]={base:img, BG, DARK, L, MASK};
 }
 function use(v){ ({base,BG,DARK,L,MASK}=STATE[v]); }
