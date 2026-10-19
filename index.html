@@ -347,16 +347,16 @@ const BRAND = {brand:"#4a9fd1",ink:"#12384f",pill:"#f4c7a6",soft:"#ddf3fa"};
    offer it for now. The content (texts, photos, blocks) never depends on the style. */
 const BALANCED = {brand:"#1f3a5f",ink:"#1f3a5f",text:"#34445a",pill:"#ffcf5c",soft:"#e8f5fb",font:"Alef",decor:false,
   headBg:"#1f3a5f",headInk:"#ffffff",headSub:"#c9d6e6",storyStroke:"#dde3ec",quote:"#3f8cd2",btn:"#ffcf5c",btnInk:"#1f3a5f",
-  line:"#dde3ec",dot:"#ffcf5c",footBg:"#f2f5f9",footLine:"#1f3a5f",tipNum:"#1f3a5f",subAccent:"#ffcf5c",
+  footBg:"#f2f5f9",footLine:"#1f3a5f",tipNum:"#1f3a5f",subAccent:"#ffcf5c",
   bannerBg:"#1f3a5f",bannerTitle:"#ffffff",slogan:"#6ccbe8",strip:"#ffcf5c",logoTile:true,stepNum:"#ffcf5c",accent:"#ffcf5c"};
 const HEAD_FONT = "Suez One";
 const styleOf = (v=view) => state.designs?.[v]?.style==="balanced" ? "balanced" : "classic";
 const BAL = () => styleOf()==="balanced";
 // the theme the grid renderers and email builders read: classic maps every role to the panel colours, exactly as before
-function TB(){ const b=state.banner;
-  return BAL() ? {...b,...BALANCED}
-    : {...b,text:b.ink,headBg:b.soft,headInk:b.ink,headSub:b.ink,storyStroke:b.brand,quote:b.brand,btn:b.brand,btnInk:"#ffffff",line:b.brand,dot:null,footBg:b.soft,footLine:b.pill,tipNum:b.brand,subAccent:null,
-       bannerBg:"#ffffff",bannerTitle:b.ink,slogan:b.brand,strip:b.brand,logoTile:false,stepNum:"#ffffff",accent:b.brand}; }
+function TB(bal=BAL()){ const b=state.banner;
+  return bal ? {...b,...BALANCED,headWave:b.brand}
+    : {...b,text:b.ink,headBg:b.soft,headInk:b.ink,headSub:b.ink,storyStroke:b.brand,quote:b.brand,btn:b.brand,btnInk:"#ffffff",footBg:b.soft,footLine:b.pill,tipNum:b.brand,subAccent:null,
+       bannerBg:"#ffffff",bannerTitle:b.ink,slogan:b.brand,strip:b.brand,logoTile:false,stepNum:"#ffffff",accent:b.brand,headWave:b.decor?b.brand:null}; }
 const FIELDS = ["issue","date","dateFormat","customDate","title","slogan","font","brand","ink","pill","soft","decor"];
 const PAGE_BG="#f8fafb", MUTED="#6b8597", S=2;
 const $ = id => document.getElementById(id);
@@ -604,7 +604,7 @@ const R = {
     const sh=text(off,{t:sub,x:65,y:0,w:380,size:14});
     const H=Math.max(150, subTop+sh-15+50.8);
     rect(ctx,20,15,560,H,18,b.headBg);
-    if(b.decor) wave(ctx,40,15+H-57.5,0.5,"M0,70 C60,70 90,10 160,10 C230,10 260,70 320,70",6,b.brand,0.45);
+    if(b.headWave) wave(ctx,40,15+H-57.5,0.5,"M0,70 C60,70 90,10 160,10 C230,10 260,70 320,70",6,b.headWave,0.45);
     rect(ctx,467.5,15+H/2-47.5,95,95,16,"#ffffff");
     blend(ctx,icon,475,15+H/2-40,80,79);
     text(ctx,{t:f.title,x:65,y:50,w:380,size:30,weight:700,color:b.headInk});
@@ -646,10 +646,10 @@ const R = {
     return 10+T+10;
   },
   async gdivider(ctx){
-    const b=TB();
+    // the wave divider is kept as is in both styles (she asked for it in "balanced" too), always with its wave there
+    const b=BAL() ? {...TB(false),decor:true} : TB();
     // spacing as in the Canva sample: the divider sits 64px (1200 scale) under the paragraph above it
-    if(b.dot){ rect(ctx,70,44,212,2,1,b.line); rect(ctx,318,44,212,2,1,b.line); dot(ctx,300,45,10,"rgba(255,207,92,.3)"); dot(ctx,300,45,5.5,b.dot); return 75; }
-    ctx.save(); ctx.globalAlpha=0.35; rect(ctx,70,44,180,2,1,b.line); rect(ctx,350,44,180,2,1,b.line); ctx.restore();
+    ctx.save(); ctx.globalAlpha=0.35; rect(ctx,70,44,180,2,1,b.brand); rect(ctx,350,44,180,2,1,b.brand); ctx.restore();
     if(b.decor) wave(ctx,260,30,0.5,"M0,30 C30,30 45,6 80,6 C115,6 130,30 160,30",5,b.brand,1);
     return 75;
   },
@@ -1080,7 +1080,9 @@ const MAIL = {
   async gheader(f){ const b=TB();
     // the newsletter agent's header image, already on the CRM domain (approved in NetFree): used as is, never re-uploaded
     const himg = /^https:\/\/app\.autosuccess\.cc\/nl-img\/[\w.-]+\.png$/.test(f.himg||"") ? tr(img(f.himg,600,220,f.title)) : "";
-    const deco = b.decor ? `<div style="text-align:left;margin-top:6px">${img(await art(160,40,ctx=>wave(ctx,0,0,0.5,"M0,70 C60,70 90,10 160,10 C230,10 260,70 320,70",6,b.brand,0.45)),160,40,"","display:inline-block")}</div>` : "";
+    // same picture as the classic wave, so it is already on Smoove's host; "images as code" draws it on the header colour
+    const deco = b.headWave ? `<div style="text-align:left;margin-top:6px">${img(await art(160,40,ctx=>{ if(BAL()&&view==="gridcode") rect(ctx,0,0,160,40,0,b.headBg);
+      wave(ctx,0,0,0.5,"M0,70 C60,70 90,10 160,10 C230,10 260,70 320,70",6,b.headWave,0.45); }),160,40,"","display:inline-block")}</div>` : "";
     return himg + tr(card(cols([[img(await iconBox(95,16,7.5),95,95,"AutoSuccess"),"width:95px;vertical-align:middle"],["","width:22px"],
       [P(f.title,{size:30,weight:700,lh:1.2,color:b.headInk})+subH(restyle(f.subtitle,(f.subtitle||"").replaceAll("{גיליון}",b.issue)),b)+deco,"vertical-align:middle"]]),
       {bg:b.headBg,radius:18,pad:"26px 17px 10px 20px"}),"15px 20px"); },
@@ -1099,12 +1101,7 @@ const MAIL = {
     return tr(card(cols([[P("”",{size:110,weight:700,lh:0.75,color:b.quote,align:"center",extra:"height:60px;overflow:hidden"}),"width:75px;vertical-align:middle"],["","width:15px"],
       [pillH(f.tag,b.pill,b.ink)+P(f.title,{size:26,weight:700,lh:1.3,mt:8}),"vertical-align:middle"],...await sideCells(blk,f,GSIDE)])+await belowRow(blk,f,520),
       {bg:"#ffffff",radius:14,pad:"20px 18px",border:`border:2px solid ${b.storyStroke};`}),"10px 20px"); },
-  async gdivider(){ const b=TB();
-    // "balanced": two lines and a sun dot in plain HTML, so no image to upload or to be held by NetFree
-    if(b.dot) return tr(`<table role="presentation" width="460" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr>`+
-      `<td style="vertical-align:middle"><div style="height:2px;line-height:2px;font-size:0;background:${b.line}"></div></td>`+
-      `<td width="40" align="center" style="width:40px;vertical-align:middle"><div style="width:11px;height:11px;line-height:11px;font-size:0;border-radius:6px;background:${b.dot};border:4px solid #fff3d6;margin:0 auto"></div></td>`+
-      `<td style="vertical-align:middle"><div style="height:2px;line-height:2px;font-size:0;background:${b.line}"></div></td></tr></table>`,"34px 20px 30px");
+  async gdivider(){
     const c=await renderBlock({type:"gdivider",f:{}}); pubProgress(`מעלה תמונות (${++pubCount})…`);
     return tr(img(await publishImage(c),600,75,"")); },
   async gcta(f){ return tr(button(f.button,f.link,21),"22px 24px","text-align:center;"); },
