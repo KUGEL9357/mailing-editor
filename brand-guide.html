@@ -117,6 +117,57 @@ h2 { font-size: 32px; margin-bottom: 6px; }
 .gm-foot .brand span { color: #fff; font-size: 18px; }
 .gm-foot p { color: var(--night-soft); font-size: 13px; margin: 6px 0 0; line-height: 1.6; }
 
+
+/* three strengths */
+.levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+.levels h3 { font-size: 22px; margin: 0 0 4px; }
+.levels .cap { margin: 0 0 10px; min-height: 3.2em; }
+.lv { font-size: 15px; }
+.lv .gm-head { margin: 10px; padding: 14px 16px; }
+.lv .gm-head .ic { width: 52px; height: 52px; border-radius: 12px; }
+.lv .gm-head h3 { font-size: 22px; }
+.lv .gm-head p { font-size: 12px; }
+.lv .gm-text { padding: 6px 18px; font-size: 14px; }
+.lv .gm-div { padding: 4px 24px 12px; }
+.lv .gm-story, .lv .gm-tip { margin: 0 10px 10px; padding: 12px 16px; }
+.lv .gm-story h4, .lv .gm-tip h4 { font-size: 18px; }
+.lv .gm-story .q { font-size: 44px; }
+.lv .gm-tip .n { font-size: 40px; }
+.gm-cta { text-align: center; padding: 4px 0 14px; }
+.gm-cta span { display: inline-block; background: var(--sun); color: var(--navy); font-weight: 700; border-radius: 10px; padding: 9px 18px; font-size: 14px; }
+.lv .gm-foot { padding: 14px; }
+.lv .gm-foot .brand span { font-size: 15px; }
+/* soft: white "morning" everywhere, yellow only as small accents */
+.lv-soft .gm-head { background: #fff; background-image: none; border: 1px solid var(--line); }
+.lv-soft .gm-head .ic { background: var(--logo-tint); border-color: transparent; }
+.lv-soft .gm-head h3 { color: var(--navy); }
+.lv-soft .gm-head p { color: var(--soft); }
+.lv-soft .gm-head p b { color: var(--logo-b); }
+.lv-soft .gm-story { border: 1px solid var(--line); }
+.lv-soft .gm-story .gm-pill { background: #fff3cf; color: #7a5a00; }
+.lv-soft .gm-story .q { color: var(--logo-a); }
+.lv-soft .gm-tip { background: var(--mist); }
+.lv-soft .gm-tip .n { color: var(--logo-b); }
+.lv-soft .gm-tip .gm-pill { border-color: var(--navy); color: var(--navy); }
+.lv-soft .gm-tip h4 { color: var(--navy); }
+.lv-soft .gm-foot { background: var(--mist); border-top: 2px solid var(--sun); }
+.lv-soft .gm-foot .brand span { color: var(--navy); }
+.lv-soft .gm-foot p { color: var(--soft); }
+/* mid: one flat navy header, everything else light */
+.lv-mid .gm-head { background: var(--navy); background-image: none; }
+.lv-mid .gm-head .ic { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.15); }
+.lv-mid .gm-head p { color: #c9d6e6; }
+.lv-mid .gm-story { border: 1px solid var(--line); }
+.lv-mid .gm-story .q { color: var(--logo-b); }
+.lv-mid .gm-tip { background: var(--logo-tint); }
+.lv-mid .gm-tip .n { color: var(--navy); }
+.lv-mid .gm-tip .gm-pill { background: var(--navy); border-color: var(--navy); color: #fff; }
+.lv-mid .gm-tip h4 { color: var(--navy); }
+.lv-mid .gm-foot { background: var(--mist); border-top: 3px solid var(--navy); }
+.lv-mid .gm-foot .brand span { color: var(--navy); }
+.lv-mid .gm-foot p { color: var(--soft); }
+@media (max-width: 860px) { .levels { grid-template-columns: 1fr; } .levels .cap { min-height: 0; } }
+
 /* signatures */
 .sigs { display: grid; gap: 16px; }
 .sig { width: 100%; max-width: 600px; aspect-ratio: 600 / 140; border-radius: 12px; display: flex; align-items: center; gap: 18px; padding: 0 24px; border: 1px solid var(--line); }
@@ -202,6 +253,41 @@ footer { text-align: center; color: var(--soft); padding: 40px 0 50px; font-size
     <div class="lg tint"><svg width="90" height="90" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#g3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg></div>
   </div>
   <p class="cap">מימין לשמאל: על רקע כהה (ראש דיוור, חתימה כהה) · על רקע לבן · סמל בלבד (אייקון, תמונת פרופיל). הסמל הוא אותו ציור בדיוק שמופיע באתר ועל הבלנק.</p>
+</section>
+
+<section>
+  <h2>שלוש עוצמות לבחירה</h2>
+  <p class="lead">"נועז מדי" זו תחושה לגיטימית. האתר יכול להרשות לעצמו דרמה, כי רואים אותו פעם אחת. דיוור נכנס לתיבת הדואר כל שבועיים, ושם עדיף רגוע. לכן הנה אותו גריד בשלוש עוצמות. כל השלוש באותם צבעים וגופנים של האתר, ההבדל הוא רק כמה כהה וכמה צהוב יש בהן.</p>
+  <div class="levels">
+    <div><h3>עדין</h3><p class="cap">הכול לבן ובהיר, כמו החלק התחתון של האתר. הצהוב מופיע רק בכפתור ובנקודות קטנות.</p><div class="mail lv lv-soft">
+  <div class="gm-head"><div class="ic"><svg width="38" height="38" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="lvsofta" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#lvsofta)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg></div><div><h3>מי עוד לא שילם?</h3><p><b>גיליון 11</b> | אוטומציה שמרוויחה לך כסף</p></div></div>
+  <div class="gm-text"><p>היי [[שם פרטי]],<br>חודש טוב ומבורך!</p></div>
+  <div class="gm-div"><i></i><b></b><i></i></div>
+  <div class="gm-story"><span class="q">”</span><span class="gm-pill">מהשטח</span><h4>השאלה שאכלה שעתיים בשבוע</h4></div>
+  <div class="gm-tip"><span class="n">01</span><div><span class="gm-pill">טיפ</span><h4>ציד הגנב השקט</h4></div></div>
+  <div class="gm-cta"><span>לתיאום שיחת התאמה ←</span></div>
+  <div class="gm-foot"><div class="brand"><svg width="24" height="24" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="lvsoftb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#lvsoftb)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg><span>AutoSuccess</span></div><p>autosuccess.cc | 058-3219356</p></div>
+</div></div>
+    <div><h3>מאוזן</h3><p class="cap">רק פס הכותרת כחול כהה (בלי הילות), כל השאר בהיר. נראה מוכר, אבל ברור שזה אותו מותג כמו האתר.</p><div class="mail lv lv-mid">
+  <div class="gm-head"><div class="ic"><svg width="38" height="38" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="lvmida" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#lvmida)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg></div><div><h3>מי עוד לא שילם?</h3><p><b>גיליון 11</b> | אוטומציה שמרוויחה לך כסף</p></div></div>
+  <div class="gm-text"><p>היי [[שם פרטי]],<br>חודש טוב ומבורך!</p></div>
+  <div class="gm-div"><i></i><b></b><i></i></div>
+  <div class="gm-story"><span class="q">”</span><span class="gm-pill">מהשטח</span><h4>השאלה שאכלה שעתיים בשבוע</h4></div>
+  <div class="gm-tip"><span class="n">01</span><div><span class="gm-pill">טיפ</span><h4>ציד הגנב השקט</h4></div></div>
+  <div class="gm-cta"><span>לתיאום שיחת התאמה ←</span></div>
+  <div class="gm-foot"><div class="brand"><svg width="24" height="24" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="lvmidb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#lvmidb)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg><span>AutoSuccess</span></div><p>autosuccess.cc | 058-3219356</p></div>
+</div></div>
+    <div><h3>נועז</h3><p class="cap">ההצעה הקודמת: כותרת ותחתית בכחול-לילה עם הילות, כרטיס טיפ כהה.</p><div class="mail lv lv-bold">
+  <div class="gm-head"><div class="ic"><svg width="38" height="38" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="lvbolda" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#lvbolda)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg></div><div><h3>מי עוד לא שילם?</h3><p><b>גיליון 11</b> | אוטומציה שמרוויחה לך כסף</p></div></div>
+  <div class="gm-text"><p>היי [[שם פרטי]],<br>חודש טוב ומבורך!</p></div>
+  <div class="gm-div"><i></i><b></b><i></i></div>
+  <div class="gm-story"><span class="q">”</span><span class="gm-pill">מהשטח</span><h4>השאלה שאכלה שעתיים בשבוע</h4></div>
+  <div class="gm-tip"><span class="n">01</span><div><span class="gm-pill">טיפ</span><h4>ציד הגנב השקט</h4></div></div>
+  <div class="gm-cta"><span>לתיאום שיחת התאמה ←</span></div>
+  <div class="gm-foot"><div class="brand"><svg width="24" height="24" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="lvboldb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#lvboldb)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg><span>AutoSuccess</span></div><p>autosuccess.cc | 058-3219356</p></div>
+</div></div>
+  </div>
+  <p class="cap" style="margin-top:14px">ההמלצה שלי: <b>מאוזן</b>. הוא מחבר את הדיוור לאתר בלי שהוא ירגיש כמו שינוי דרמטי למי שקוראת אותו כבר חודשים. אם גם הוא מרגיש לך יותר מדי, "עדין" הוא בחירה טובה לגמרי.</p>
 </section>
 
 <section>
