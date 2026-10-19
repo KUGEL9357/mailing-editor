@@ -947,7 +947,7 @@ const pxCanvases=[];      // "images as code" tab: canvases waiting for img() to
 async function publishImage(c){
   if(view==="gridcode") return "px:"+(pxCanvases.push(c)-1);
   const {url,host}=await call("api/smoove/image",{method:"POST",headers:{"content-type":"image/png"},body:await canvasBlob(c)});
-  if(host!=="smoove") pubOnSite++;     // fell back to autosuccess.cc: NetFree may hold it
+  if(host!=="smoove"&&host!=="crm") pubOnSite++;     // fell back to autosuccess.cc: NetFree may hold it (the CRM domain is approved)
   return url;
 }
 let pubCount=0, pubOnSite=0, pubProgress=()=>{};

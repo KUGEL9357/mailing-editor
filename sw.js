@@ -1,7 +1,7 @@
 // Service worker: makes the editor installable as an app with its own icon, and lets it open
 // while the tunnel reconnects. Network first, so every update shows up on the next open.
 // Never touches the server routes (saves, Smoove, saved data, health check).
-const VERSION = "mailing-editor-v8";
+const VERSION = "mailing-editor-v9";
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", e => e.waitUntil(
   caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())
