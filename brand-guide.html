@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>קו עיצובי חדש · AutoSuccess</title>
+<style>
+@font-face { font-family: "Suez One"; src: url(fonts/suez-one-hebrew-400-normal.woff2) format("woff2"); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+@font-face { font-family: "Suez One"; src: url(fonts/suez-one-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: "Alef"; font-weight: 400; src: url(fonts/alef-hebrew-400-normal.woff2) format("woff2"); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+@font-face { font-family: "Alef"; font-weight: 700; src: url(fonts/alef-hebrew-700-normal.woff2) format("woff2"); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+@font-face { font-family: "Alef"; font-weight: 400; src: url(fonts/alef-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: "Alef"; font-weight: 700; src: url(fonts/alef-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+
+:root {
+  --night: #0a1424; --night-2: #0f1e36; --night-3: #16294a; --night-line: #26406a; --night-soft: #a6b7cf;
+  --navy: #1f3a5f; --sun: #ffcf5c; --ink: #17212f; --body-ink: #34445a; --soft: #56657a;
+  --mist: #f2f5f9; --line: #dde3ec; --logo-a: #6ccbe8; --logo-b: #3f8cd2; --logo-tint: #e8f5fb;
+  --f-head: "Suez One", "Alef", serif; --f-body: "Alef", Tahoma, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--mist); color: var(--ink); font-family: var(--f-body); font-size: 17px; line-height: 1.7; }
+.wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+h1, h2, h3 { font-family: var(--f-head); font-weight: 400; color: var(--navy); margin: 0; line-height: 1.2; }
+.top { background: var(--night); color: #e9f0f9; padding: 56px 0 48px; position: relative; overflow: hidden; }
+.top::before { content: ""; position: absolute; inset: 0; background: radial-gradient(600px circle at 15% 20%, rgba(42,127,184,.45), transparent 70%), radial-gradient(300px circle at 70% 60%, rgba(199,151,42,.18), transparent 70%); }
+.top .wrap { position: relative; }
+.top h1 { color: #fff; font-size: clamp(34px, 5vw, 56px); }
+.top h1 span { color: var(--sun); }
+.top p { color: var(--night-soft); max-width: 62ch; margin: 14px 0 0; font-size: 1.1rem; }
+section { padding: 44px 0 8px; }
+h2 { font-size: 32px; margin-bottom: 6px; }
+.lead { color: var(--soft); margin: 0 0 22px; max-width: 70ch; }
+.cap { color: var(--soft); font-size: .95rem; margin: 10px 0 0; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+
+/* colors */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+.sw { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.sw i { display: block; height: 84px; }
+.sw div { padding: 10px 14px 12px; }
+.sw b { display: block; }
+.sw code { font-size: .9rem; color: var(--soft); direction: ltr; display: inline-block; }
+.sw small { display: block; color: var(--soft); line-height: 1.45; margin-top: 4px; }
+
+/* fonts */
+.fonts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fonts .big { font-family: var(--f-head); font-size: 44px; color: var(--navy); line-height: 1.1; }
+.fonts .body { font-size: 22px; }
+
+/* logo */
+.logos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.lg { border-radius: 16px; min-height: 170px; display: grid; place-items: center; padding: 20px; border: 1px solid var(--line); }
+.lg.dark { background: var(--night); border-color: var(--night); }
+.lg.light { background: #fff; }
+.lg.tint { background: var(--logo-tint); }
+.brand { display: flex; align-items: center; gap: 12px; direction: ltr; }
+.brand span { font-weight: 700; font-size: 26px; letter-spacing: .01em; }
+.brand em { display: block; font-style: normal; font-size: 13px; font-weight: 400; direction: rtl; text-align: left; opacity: .8; letter-spacing: 0; }
+.lg.dark .brand span { color: #fff; }
+.lg.light .brand span, .lg.tint .brand span { color: var(--navy); }
+
+/* before/after */
+.ba { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+.tag { display: inline-block; font-weight: 700; font-size: .9rem; border-radius: 999px; padding: 3px 14px; margin-bottom: 10px; }
+.tag.old { background: #eceff3; color: var(--soft); }
+.tag.new { background: var(--sun); color: var(--navy); }
+.ba img { width: 100%; border-radius: 12px; border: 1px solid var(--line); display: block; }
+
+/* new newsletter mockup (email-width) */
+.mail { max-width: 600px; background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 20px 50px -30px rgba(31,58,95,.5); }
+.m-head { background: var(--night); background-image: radial-gradient(320px circle at 10% 0%, rgba(42,127,184,.55), transparent 70%), radial-gradient(160px circle at 80% 100%, rgba(199,151,42,.22), transparent 70%); padding: 22px 26px 30px; color: #fff; }
+.m-row { display: flex; justify-content: space-between; align-items: center; }
+.m-row .brand span { color: #fff; font-size: 19px; }
+.m-issue { color: var(--night-soft); font-size: 14px; text-align: left; line-height: 1.4; }
+.m-issue b { color: var(--sun); font-weight: 700; }
+.m-eyebrow { color: var(--sun); font-weight: 700; margin: 26px 0 4px; font-size: 15px; }
+.m-title { font-family: var(--f-head); font-size: 36px; line-height: 1.1; margin: 0; color: #fff; }
+.m-title span { color: var(--sun); }
+.m-lead { color: var(--night-soft); margin: 12px 0 0; font-size: 16px; line-height: 1.65; }
+.m-sun { height: 6px; background: linear-gradient(90deg, var(--logo-b), var(--logo-a), var(--sun)); }
+.m-body { padding: 26px; }
+.m-body h3 { font-size: 24px; margin-bottom: 14px; }
+.m-step { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+.m-step i { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--navy); color: var(--sun); font-style: normal; font-family: var(--f-head); display: grid; place-items: center; font-size: 18px; }
+.m-step b { display: block; font-family: var(--f-head); font-weight: 400; color: var(--navy); font-size: 19px; line-height: 1.2; }
+.m-step span { color: var(--body-ink); font-size: 15px; }
+.m-insight { background: var(--logo-tint); border-inline-start: 4px solid var(--logo-b); border-radius: 12px; padding: 14px 16px; color: var(--navy); margin: 18px 0; }
+.m-cta { text-align: center; padding: 6px 0 4px; }
+.m-btn { display: inline-block; background: var(--sun); color: var(--navy); font-weight: 700; border-radius: 10px; padding: 13px 26px; text-decoration: none; font-size: 17px; }
+.m-foot { background: var(--night); color: var(--night-soft); text-align: center; font-size: 13px; padding: 16px; line-height: 1.6; }
+.m-foot a { color: var(--logo-a); }
+
+/* signatures */
+.sigs { display: grid; gap: 16px; }
+.sig { width: 100%; max-width: 600px; aspect-ratio: 600 / 140; border-radius: 12px; display: flex; align-items: center; gap: 18px; padding: 0 24px; border: 1px solid var(--line); }
+.sig.dark { background: var(--night); background-image: radial-gradient(240px circle at 0% 0%, rgba(42,127,184,.5), transparent 70%); border-color: var(--night); }
+.sig.light { background: #fff; }
+.sig .who { flex: 1; }
+.sig .name { font-family: var(--f-head); font-size: 25px; line-height: 1.1; }
+.sig.dark .name { color: #fff; } .sig.light .name { color: var(--navy); }
+.sig .name span { color: var(--sun); }
+.sig.light .name span { color: var(--logo-b); }
+.sig .svc { font-size: 13px; margin-top: 2px; }
+.sig.dark .svc { color: var(--night-soft); } .sig.light .svc { color: var(--soft); }
+.sig .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.sig .pills b { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 10px; direction: ltr; }
+.sig.dark .pills b { border: 1.5px solid var(--sun); color: var(--sun); }
+.sig.light .pills b { border: 1.5px solid var(--navy); color: var(--navy); }
+.sig .divider { width: 2px; align-self: stretch; margin: 26px 0; background: linear-gradient(var(--logo-a), var(--sun)); border-radius: 2px; }
+
+/* decisions */
+.dec { counter-reset: d; display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; }
+.dec li { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 16px 18px; position: relative; padding-inline-start: 60px; }
+.dec li::before { counter-increment: d; content: counter(d); position: absolute; inset-inline-start: 16px; top: 16px; width: 30px; height: 30px; border-radius: 50%; background: var(--sun); color: var(--navy); font-family: var(--f-head); display: grid; place-items: center; }
+.dec b { color: var(--navy); }
+.note { background: #fff8e1; border: 1px solid #f3dd98; border-radius: 14px; padding: 16px 18px; }
+footer { text-align: center; color: var(--soft); padding: 40px 0 50px; font-size: .95rem; }
+
+@media (max-width: 760px) {
+  .fonts, .logos, .ba { grid-template-columns: 1fr; }
+  .sig { aspect-ratio: auto; padding: 18px; }
+  .sig .divider { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>הקו העיצובי החדש <span>של AutoSuccess</span></h1>
+    <p>הכול נלקח ישירות מהאתר החדש: אותם צבעים, אותם גופנים ואותה תחושה של מעבר מלילה לבוקר. אחרי שתאשרי את הדף הזה, אני מעדכן לפיו את הדיוור, את החתימות, את העורך, את טופס ההרשמה ואת ערכת המותג בקנבה.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section>
+  <h2>מאיפה זה מגיע</h2>
+  <p class="lead">זה החלק העליון של האתר כמו שהוא נראה היום. ממנו לקחתי את הכיוון: רקע כחול-לילה עמוק, הילות אור עדינות, כותרות עבות עם שורה שנייה בצהוב, וכפתורים צהובים.</p>
+  <img src="assets/brand/site-hero.jpg" alt="צילום מסך של החלק העליון באתר autosuccess.cc" style="width:100%;border-radius:14px;border:1px solid var(--line);display:block">
+  <p class="cap">צילום מסך של האתר החי, autosuccess.cc, מהיום.</p>
+</section>
+
+<section>
+  <h2>הצבעים</h2>
+  <p class="lead">שתי משפחות צבעים: כחול-לילה וצהוב-שמש של האתר, ולצידן התכלת-כחול של הלוגו, שנשאר בדיוק כמו שהוא.</p>
+  <div class="swatches">
+    <div class="sw"><i style="background:#0a1424"></i><div><b>לילה</b><code>#0A1424</code><small>רקע של חלקים כהים: ראש הדיוור, חתימה כהה</small></div></div>
+    <div class="sw"><i style="background:#1f3a5f"></i><div><b>כחול כהה</b><code>#1F3A5F</code><small>כותרות על רקע לבן, עיגולי מספרים</small></div></div>
+    <div class="sw"><i style="background:#ffcf5c"></i><div><b>צהוב שמש</b><code>#FFCF5C</code><small>כפתורים, מילה מודגשת בכותרת, תגיות</small></div></div>
+    <div class="sw"><i style="background:linear-gradient(135deg,#6ccbe8,#3f8cd2)"></i><div><b>הלוגו</b><code>#6CCBE8 → #3F8CD2</code><small>רק בלוגו ובקווים דקים, בלי שינוי</small></div></div>
+    <div class="sw"><i style="background:#e8f5fb"></i><div><b>תכלת בהיר</b><code>#E8F5FB</code><small>רקע לתיבת "תובנה" או ציטוט</small></div></div>
+    <div class="sw"><i style="background:#a6b7cf"></i><div><b>אפור-לילה</b><code>#A6B7CF</code><small>טקסט משני על רקע כהה</small></div></div>
+    <div class="sw"><i style="background:#34445a"></i><div><b>טקסט רץ</b><code>#34445A</code><small>גוף הטקסט על רקע לבן</small></div></div>
+    <div class="sw"><i style="background:#f2f5f9"></i><div><b>ערפל</b><code>#F2F5F9</code><small>רקע שקט מסביב לדיוור</small></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>הגופנים</h2>
+  <p class="lead">הדיוור היום כתוב בגופן פשוט ואחיד. באתר יש שני גופנים, ואותם נעביר לכל החומרים.</p>
+  <div class="fonts">
+    <div class="card"><div class="big">Suez One</div><div class="big" style="font-size:30px">לכותרות בלבד</div><p class="cap">גופן עבה וחם, נותן את האופי. כותרות, שם בחתימה, מספרים בעיגולים.</p></div>
+    <div class="card"><div class="body"><b>Alef</b></div><div class="body">לכל הטקסט הרץ, לכפתורים ולפרטים הקטנים.</div><p class="cap">קריא ונקי. ברגיל לטקסט, ובעבה לכפתורים ולתגיות.</p></div>
+  </div>
+  <p class="cap">חשוב לדעת: במייל עצמו חלק מתוכנות המייל לא מציגות גופנים מיוחדים. במקרה כזה הכותרות יוצגו בגופן רגיל עבה, והמבנה והצבעים יישארו כמו שהם.</p>
+</section>
+
+<section>
+  <h2>הלוגו: אותו לוגו, מותאם</h2>
+  <p class="lead">הסמל (ריבוע מעוגל, גל וחץ) לא משתנה בכלל. מה שמשתנה: המילה AutoSuccess תהיה בגופן של האתר, ויהיו שלוש גרסאות, לכל רקע.</p>
+  <div class="logos">
+    <div class="lg dark"><div class="brand"><svg width="54" height="54" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#g1)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg><span>AutoSuccess<em>אוטומציה שמרוויחה לך כסף</em></span></div></div>
+    <div class="lg light"><div class="brand"><svg width="54" height="54" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#g2)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg><span>AutoSuccess<em>אוטומציה שמרוויחה לך כסף</em></span></div></div>
+    <div class="lg tint"><svg width="90" height="90" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#g3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg></div>
+  </div>
+  <p class="cap">מימין לשמאל: על רקע כהה (ראש דיוור, חתימה כהה) · על רקע לבן · סמל בלבד (אייקון, תמונת פרופיל). הסמל הוא אותו ציור בדיוק שמופיע באתר ועל הבלנק.</p>
+</section>
+
+<section>
+  <h2>הדיוור: לפני ואחרי</h2>
+  <p class="lead">המבנה נשאר אותו מבנה (ראש, כותרת ראשית, שלבים, תובנה, כפתור, תחתית). רק הלבוש מתחלף: ראש בלילה, תוכן בבוקר, כמו באתר.</p>
+  <div class="ba">
+    <div><span class="tag old">היום</span><img src="assets/brand/old-newsletter.png" alt="הדיוור הנוכחי"></div>
+    <div><span class="tag new">ההצעה</span>
+      <div class="mail">
+        <div class="m-head">
+          <div class="m-row">
+            <div class="brand"><svg width="34" height="34" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#g4)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg><span>AutoSuccess</span></div>
+            <div class="m-issue">דיוור <b>#01</b><br>אוקטובר 2026</div>
+          </div>
+          <p class="m-eyebrow">טיפ מעשי</p>
+          <h3 class="m-title">לפני שמאוטמטים, <span>עוצרים.</span></h3>
+          <p class="m-lead">לפני שמחברים עוד כלי ועוד אוטומציה, צריך להבין מה באמת קורה בעסק.</p>
+        </div>
+        <div class="m-sun"></div>
+        <div class="m-body">
+          <h3>אז מאיפה מתחילים?</h3>
+          <div class="m-step"><i>1</i><div><b>עוצרים</b><span>מה קורה היום בפועל?</span></div></div>
+          <div class="m-step"><i>2</i><div><b>ממפים</b><span>איפה הזמן הולך לאיבוד?</span></div></div>
+          <div class="m-step"><i>3</i><div><b>מזהים</b><span>מה באמת שווה לאוטמט?</span></div></div>
+          <div class="m-insight">תובנה: אוטומציה טובה מתחילה בדף ועט, לא בתוכנה.</div>
+          <div class="m-cta"><a class="m-btn" href="#">רוצה לבדוק איפה אפשר לייעל? ←</a></div>
+        </div>
+        <div class="m-foot">רויזי קוגל · AutoSuccess · <a href="#">autosuccess.cc</a><br>להסרה מרשימת התפוצה לחצי כאן</div>
+      </div>
+      <p class="cap">ההצעה בנויה כולה מטקסט וצבעים, בלי תמונות, ולכן היא עוברת את נטפרי. הלוגו בדיוור האמיתי ייכנס בשיטה שכבר עובדת אצלך (תמונה מהדומיין שלך או ציור בתאים).</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>החתימה במייל: לפני ואחרי</h2>
+  <p class="lead">אותם פרטים, אותו גודל (600×140), בלי קישוטים (כמו שביקשת אז). ההנפשה עם היד והברק תיבנה מחדש על הגרסה החדשה.</p>
+  <div class="ba">
+    <div class="sigs"><span class="tag old" style="justify-self:start">היום</span><img src="assets/brand/old-sig-dark.png" alt="החתימה הכהה הנוכחית"><img src="assets/brand/old-sig-light.png" alt="החתימה הבהירה הנוכחית"></div>
+    <div class="sigs"><span class="tag new" style="justify-self:start">ההצעה</span>
+      <div class="sig dark">
+        <svg width="66" height="66" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="g5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#g5)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg>
+        <div class="divider"></div>
+        <div class="who"><div class="name">רויזי קוגל <span>| AutoSuccess</span></div><div class="svc">אפיון תהליכים | מערכות ניהול | אוטומציות מותאמות אישית</div><div class="pills"><b>058-3219356</b><b>info@autosuccess.cc</b><b>autosuccess.cc</b></div></div>
+      </div>
+      <div class="sig light">
+        <svg width="66" height="66" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="g6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#g6)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg>
+        <div class="divider"></div>
+        <div class="who"><div class="name">רויזי קוגל <span>| AutoSuccess</span></div><div class="svc">אפיון תהליכים | מערכות ניהול | אוטומציות מותאמות אישית</div><div class="pills"><b>058-3219356</b><b>info@autosuccess.cc</b><b>autosuccess.cc</b></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>מה אני צריך שתאשרי</h2>
+  <ol class="dec">
+    <li><b>הצבעים והגופנים</b> כמו שהם למעלה, או תיקון.</li>
+    <li><b>ראש הדיוור כהה</b> (לילה, כמו ראש האתר) ותוכן לבן. החלופה: דיוור כולו לבן, עם צהוב וכחול-כהה בלבד.</li>
+    <li><b>הלוגו:</b> המילה AutoSuccess בגופן של האתר ושורת הסלוגן מתחת. האם להשאיר את הסלוגן "אוטומציה שמרוויחה לך כסף"?</li>
+    <li><b>החתימות:</b> כהה ובהירה כמו בהצעה.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>ערכת מותג חדשה בקנבה</h2>
+  <div class="note">החיבור של קנבה מאפשר לי לקרוא ערכות מותג אבל לא ליצור אחת חדשה. לכן אני אכין בקנבה עיצוב בשם "AutoSuccess | Brand Kit 2026" עם הצבעים, הגופנים והלוגואים החדשים, ואת תיצרי ממנו את הערכה בכמה לחיצות, עם מדריך קצר שאכין לך. אם יתברר שיש דרך לעשות את זה ישירות, אעשה את זה בעצמי.</div>
+</section>
+
+</main>
+<footer>AutoSuccess · דף אישור קו עיצובי · 19.10.2026</footer>
+</body>
+</html>
