@@ -168,6 +168,26 @@ h2 { font-size: 32px; margin-bottom: 6px; }
 .lv-mid .gm-foot p { color: var(--soft); }
 @media (max-width: 860px) { .levels { grid-template-columns: 1fr; } .levels .cap { min-height: 0; } }
 
+
+/* editor explainer */
+.ed { display: grid; grid-template-columns: 300px 1fr; gap: 22px; align-items: start; }
+.ed-panel { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; font-size: 14px; }
+.ed-panel h4 { margin: 0 0 12px; font-size: 15px; color: var(--navy); font-family: var(--f-body); font-weight: 700; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--mist); border: 1px solid var(--line); border-radius: 999px; padding: 4px; margin-bottom: 14px; }
+.seg span { text-align: center; border-radius: 999px; padding: 6px 0; font-weight: 700; color: var(--soft); }
+.seg span.on { background: var(--navy); color: #fff; }
+.ed-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-top: 1px dashed var(--line); color: var(--soft); }
+.ed-row i { width: 46px; height: 18px; border-radius: 5px; display: inline-block; border: 1px solid var(--line); }
+.ed-new { outline: 3px solid var(--sun); outline-offset: 4px; border-radius: 999px; }
+.thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.thumbs figure { margin: 0; }
+.thumbs img { width: 100%; border-radius: 10px; border: 1px solid var(--line); display: block; max-height: 300px; object-fit: cover; object-position: top; }
+.thumbs figcaption { font-size: .92rem; color: var(--soft); margin-top: 6px; }
+.flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+.flow div { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+.flow b { display: block; color: var(--navy); font-family: var(--f-head); font-weight: 400; font-size: 19px; margin-bottom: 4px; }
+@media (max-width: 760px) { .ed, .flow, .thumbs { grid-template-columns: 1fr; } }
+
 /* signatures */
 .sigs { display: grid; gap: 16px; }
 .sig { width: 100%; max-width: 600px; aspect-ratio: 600 / 140; border-radius: 12px; display: flex; align-items: center; gap: 18px; padding: 0 24px; border: 1px solid var(--line); }
@@ -288,6 +308,37 @@ footer { text-align: center; color: var(--soft); padding: 40px 0 50px; font-size
 </div></div>
   </div>
   <p class="cap" style="margin-top:14px">ההמלצה שלי: <b>מאוזן</b>. הוא מחבר את הדיוור לאתר בלי שהוא ירגיש כמו שינוי דרמטי למי שקוראת אותו כבר חודשים. אם גם הוא מרגיש לך יותר מדי, "עדין" הוא בחירה טובה לגמרי.</p>
+</section>
+
+<section>
+  <h2>איך זה יעבוד בעורך</h2>
+  <p class="lead">בעורך, בחלון "עיצוב" שבו את בוחרת היום פונט וצבעים, יתווסף מתג אחד: <b>מאוזן / קלאסי</b>. הוא משנה רק את הלבוש של הדיוור. מה שכתבת, התמונות והבלוקים נשארים בדיוק כמו שהם.</p>
+  <div class="ed">
+    <div class="ed-panel">
+      <h4>עיצוב</h4>
+      <div class="seg ed-new"><span class="on">מאוזן</span><span>קלאסי</span></div>
+      <div class="ed-row">פונט <span>Alef + Suez One</span></div>
+      <div class="ed-row">צבע מותג <i style="background:#1f3a5f"></i></div>
+      <div class="ed-row">צבע כפתור <i style="background:#ffcf5c"></i></div>
+      <div class="ed-row">צבע כרטיסים <i style="background:#e8f5fb"></i></div>
+      <p class="cap" style="margin-top:10px">המסגרת הצהובה מסמנת את מה שחדש. כל השאר כבר קיים היום.</p>
+    </div>
+    <div class="thumbs">
+      <figure><img src="assets/brand/old-grid.png" alt="הגריד בסגנון קלאסי"><figcaption>"קלאסי": הדיוור כמו היום, אחד לאחד.</figcaption></figure>
+      <figure><div class="mail lv lv-mid" style="max-height:300px;overflow:hidden">
+        <div class="gm-head"><div class="ic"><svg width="38" height="38" viewBox="30 26 177 175" fill="none"><defs><linearGradient id="ed1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CCBE8"/><stop offset="1" stop-color="#3F8CD2"/></linearGradient></defs><g stroke="url(#ed1)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><rect x="33" y="29" width="171" height="169" rx="22"/><path d="M37 136 C 58 110, 78 92, 96 96 C 120 101, 132 148, 160 158 C 178 164, 194 156, 203 146"/><path d="M52 188 L 178 66"/><path d="M150 66 L 178 66 L 178 94"/></g></svg></div><div><h3>מי עוד לא שילם?</h3><p><b>גיליון 11</b> | אוטומציה שמרוויחה לך כסף</p></div></div>
+        <div class="gm-text"><p>היי [[שם פרטי]],<br>חודש טוב ומבורך!</p><p>מייל זה נשלח אלייך כי נרשמת בעבר לקבלת ערכת הקסם לעסק רווחי יותר.</p></div>
+        <div class="gm-div"><i></i><b></b><i></i></div>
+        <div class="gm-story"><span class="q">”</span><span class="gm-pill">מהשטח</span><h4>השאלה שאכלה שעתיים בשבוע</h4></div>
+      </div><figcaption>"מאוזן": אותו גיליון בדיוק, בלבוש של האתר.</figcaption></figure>
+    </div>
+  </div>
+  <div class="flow">
+    <div><b>1. לוחצים על המתג</b>התצוגה בעורך מתחלפת מיד, ורואים את הגיליון בסגנון החדש.</div>
+    <div><b>2. שולחים לסמוב כרגיל</b>"עדכן את הדיוור האחרון" או "צור דיוור חדש" יוצרים את המייל בסגנון שבחרת.</div>
+    <div><b>3. לא אהבת? חוזרים</b>לחיצה על "קלאסי" מחזירה הכול כמו שהיה. שום דבר לא נמחק.</div>
+  </div>
+  <p class="cap">כל תבנית (גריד, גריד עם תמונות בקוד ו-Master) זוכרת את הסגנון שלה בנפרד, כך שאפשר להתחיל בגריד בלבד.</p>
 </section>
 
 <section>
