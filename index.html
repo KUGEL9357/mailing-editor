@@ -953,8 +953,10 @@ const MAIL = {
 
   /* ----- "גריד דיוור תוכן" ----- */
   async gheader(f){ const b=state.banner;
+    // the newsletter agent's header image, already on the CRM domain (approved in NetFree): used as is, never re-uploaded
+    const himg = /^https:\/\/app\.autosuccess\.cc\/nl-img\/[\w.-]+\.png$/.test(f.himg||"") ? tr(img(f.himg,600,220,f.title)) : "";
     const deco = b.decor ? `<div style="text-align:left;margin-top:6px">${img(await art(160,40,ctx=>wave(ctx,0,0,0.5,"M0,70 C60,70 90,10 160,10 C230,10 260,70 320,70",6,b.brand,0.45)),160,40,"","display:inline-block")}</div>` : "";
-    return tr(card(cols([[img(await iconBox(95,16,7.5),95,95,"AutoSuccess"),"width:95px;vertical-align:middle"],["","width:22px"],
+    return himg + tr(card(cols([[img(await iconBox(95,16,7.5),95,95,"AutoSuccess"),"width:95px;vertical-align:middle"],["","width:22px"],
       [P(f.title,{size:30,weight:700,lh:1.2})+P(restyle(f.subtitle,(f.subtitle||"").replaceAll("{גיליון}",b.issue)),{size:14,lh:1.4,mt:10})+deco,"vertical-align:middle"]]),
       {bg:b.soft,radius:18,pad:"26px 17px 10px 20px"}),"15px 20px"); },
   async gpara(f){ return tr(P(f.text,{size:16,lh:1.6}),"20px 40px"); },
