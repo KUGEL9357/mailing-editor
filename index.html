@@ -347,14 +347,16 @@ const BRAND = {brand:"#4a9fd1",ink:"#12384f",pill:"#f4c7a6",soft:"#ddf3fa"};
    offer it for now. The content (texts, photos, blocks) never depends on the style. */
 const BALANCED = {brand:"#1f3a5f",ink:"#1f3a5f",text:"#34445a",pill:"#ffcf5c",soft:"#e8f5fb",font:"Alef",decor:false,
   headBg:"#1f3a5f",headInk:"#ffffff",headSub:"#c9d6e6",storyStroke:"#dde3ec",quote:"#3f8cd2",btn:"#ffcf5c",btnInk:"#1f3a5f",
-  line:"#dde3ec",dot:"#ffcf5c",footBg:"#f2f5f9",footLine:"#1f3a5f",tipNum:"#1f3a5f"};
+  line:"#dde3ec",dot:"#ffcf5c",footBg:"#f2f5f9",footLine:"#1f3a5f",tipNum:"#1f3a5f",subAccent:"#ffcf5c",
+  bannerBg:"#1f3a5f",bannerTitle:"#ffffff",slogan:"#6ccbe8",strip:"#ffcf5c",logoTile:true,stepNum:"#ffcf5c",accent:"#ffcf5c"};
 const HEAD_FONT = "Suez One";
-const styleOf = (v=view) => designOf(v)==="grid" && state.designs?.[v]?.style==="balanced" ? "balanced" : "classic";
+const styleOf = (v=view) => state.designs?.[v]?.style==="balanced" ? "balanced" : "classic";
 const BAL = () => styleOf()==="balanced";
 // the theme the grid renderers and email builders read: classic maps every role to the panel colours, exactly as before
 function TB(){ const b=state.banner;
   return BAL() ? {...b,...BALANCED}
-    : {...b,text:b.ink,headBg:b.soft,headInk:b.ink,headSub:b.ink,storyStroke:b.brand,quote:b.brand,btn:b.brand,btnInk:"#ffffff",line:b.brand,dot:null,footBg:b.soft,footLine:b.pill,tipNum:b.brand}; }
+    : {...b,text:b.ink,headBg:b.soft,headInk:b.ink,headSub:b.ink,storyStroke:b.brand,quote:b.brand,btn:b.brand,btnInk:"#ffffff",line:b.brand,dot:null,footBg:b.soft,footLine:b.pill,tipNum:b.brand,subAccent:null,
+       bannerBg:"#ffffff",bannerTitle:b.ink,slogan:b.brand,strip:b.brand,logoTile:false,stepNum:"#ffffff",accent:b.brand}; }
 const FIELDS = ["issue","date","dateFormat","customDate","title","slogan","font","brand","ink","pill","soft","decor"];
 const PAGE_BG="#f8fafb", MUTED="#6b8597", S=2;
 const $ = id => document.getElementById(id);
@@ -480,10 +482,13 @@ function pill(ctx,label,fill,color,dy=0){
   text(ctx,{t:label,x:465-w,y:31+dy+(h-tSize(label,13)*1.16)/2,w,size:13,weight:700,color,align:"center"});
 }
 
+// "גיליון 11 | סלוגן" -> ["גיליון 11", "| סלוגן"]: the part before the bar gets the accent colour (one-line subtitles only)
+const splitSub = t => { const v=String(t??""), i=v.indexOf("|"); return i>0 && !v.includes("\n") ? [v.slice(0,i).trim(), v.slice(i)] : ["",v]; };
+
 /* ---------- block renderers: draw at y=0 and return the block height ---------- */
 const R = {
   async header(ctx){
-    const b=state.banner, logo=await loadImg("logo.png");
+    const b=TB(), logo=await loadImg("logo.png");
     rect(ctx,24,24,552,104,16,"#ffffff");
     logoBox(ctx,logo,472,30,96,92);
     text(ctx,{t:`דיוור #${b.issue}\n${dateText(b)}`,x:48,y:54,w:200,size:14,color:b.ink,lh:1.5});
@@ -491,7 +496,7 @@ const R = {
     return 144;
   },
   async hero(ctx,f,blk){
-    const b=state.banner, photo=await loadImg(blk.photo).catch(()=>null);
+    const b=TB(), photo=await loadImg(blk.photo).catch(()=>null);
     // measure the text column first so the card can grow
     const off=document.createElement("canvas").getContext("2d");
     const tagBox=Math.max(34,tSize(f.tag,14)*1.16+18), tagH = f.tag?.trim()?tagBox+14:0, ty=44+tagH;
@@ -503,26 +508,26 @@ const R = {
     if(tagH){ ctx.font=tFontCss(f.tag,700,14); const tw=Math.max(110,ctx.measureText(f.tag).width/S+40);
       rect(ctx,548-tw,44,tw,tagBox,tagBox/2,b.pill); text(ctx,{t:f.tag,x:548-tw,y:44+(tagBox-tSize(f.tag,14)*1.16)/2,w:tw,size:14,weight:700,color:b.ink,align:"center"}); }
     text(ctx,{t:f.title,x:252,y:ty,w:300,size:31,weight:700,color:b.ink,lh:1.15});
-    text(ctx,{t:f.text,x:258,y:subTop,w:290,size:17,color:b.ink});
+    text(ctx,{t:f.text,x:258,y:subTop,w:290,size:17,color:b.text});
     if(b.decor){ const cy=16+H-36; curve(ctx,420,cy,"M128,2 H18 A16,16 0 0 0 2,18",b.brand); dot(ctx,422,cy+18,7,b.brand); }
     return 16+H+20;
   },
   async text(ctx,f){
-    const b=state.banner;
+    const b=TB();
     const h1=text(ctx,{t:f.title,x:24,y:20,w:552,size:28,weight:700,color:b.ink,lh:1.2});
     let y=20;
-    if(h1){ rect(ctx,506,20+h1+11,70,3,0,b.brand); y=20+h1+27; }
-    const h2=text(ctx,{t:f.text,x:24,y,w:552,size:18,color:b.ink,lh:1.5});
+    if(h1){ rect(ctx,506,20+h1+11,70,3,0,b.accent); y=20+h1+27; }
+    const h2=text(ctx,{t:f.text,x:24,y,w:552,size:18,color:b.text,lh:1.5});
     return y+h2+20;
   },
   async image(ctx,f,blk){
     const photo=await loadImg(blk.photo).catch(()=>null);
-    if(photo) cover(ctx,photo,24,20,552,296); else rect(ctx,24,20,552,296,0,state.banner.soft);
+    if(photo) cover(ctx,photo,24,20,552,296); else rect(ctx,24,20,552,296,0,TB().soft);
     const h=text(ctx,{t:f.caption,x:24,y:326,w:552,size:14,color:MUTED});
     return h? 326+h+18 : 336;
   },
   async steps(ctx,f){
-    const b=state.banner;
+    const b=TB();
     const h1=text(ctx,{t:f.title,x:24,y:20,w:552,size:26,weight:700,color:b.ink});
     const steps=[1,2,3].map(n=>[f["s"+n],f["d"+n]]).filter(([s,d])=>(s||"").trim()||(d||"").trim());
     let y=h1? 20+h1+14 : 20; const tops=[];
@@ -533,14 +538,14 @@ const R = {
     if(tops.length>1) rect(ctx,555,tops[0]+20,2,tops.at(-1)-tops[0],0,b.soft);
     steps.forEach(([s,d],i)=>{ const t=tops[i];
       dot(ctx,556,t+20,20,b.brand);
-      text(ctx,{t:String(i+1),x:536,y:t+20-18*1.16/2,w:40,size:18,weight:700,color:"#ffffff",align:"center"});
+      text(ctx,{t:String(i+1),x:536,y:t+20-18*1.16/2,w:40,size:18,weight:700,color:b.stepNum,align:"center"});
       const hs=text(ctx,{t:s,x:24,y:t-2,w:496,size:20,weight:700,color:b.ink});
-      text(ctx,{t:d,x:24,y:t-2+(hs?28:0),w:496,size:16,color:b.ink});
+      text(ctx,{t:d,x:24,y:t-2+(hs?28:0),w:496,size:16,color:b.text});
     });
     return tops.length? tops.at(-1)+61 : y+16;
   },
   async insight(ctx,f,blk){
-    const b=state.banner, off=document.createElement("canvas").getContext("2d");
+    const b=TB(), off=document.createElement("canvas").getContext("2d");
     const photo=blk.cphoto? await loadImg(blk.cphoto).catch(()=>null) : null, side=photo&&cardPos(blk)==="side";
     const tx=side?244:48, tw=side?308:504, sh=side?sideH(photo,180):0, ph=photo&&!side?belowH(photo,504):0;
     let y=39; const parts=[];
@@ -554,33 +559,33 @@ const R = {
     for(const [k,py] of parts){
       if(k==="label") text(ctx,{t:f.label,x:tx,y:py,w:tw,size:13,weight:700,color:b.brand});
       if(k==="title") text(ctx,{t:f.title,x:tx,y:py,w:tw,size:25,weight:700,color:b.ink});
-      if(k==="text")  text(ctx,{t:f.text,x:tx,y:py,w:tw,size:17,color:b.ink,lh:1.45});
+      if(k==="text")  text(ctx,{t:f.text,x:tx,y:py,w:tw,size:17,color:b.text,lh:1.45});
       if(k==="photo") roundPhoto(ctx,photo,48,py,504,ph);
     }
     if(b.decor){ const cy=17+H-48; curve(ctx,48,cy,"M0,2 H82 A16,16 0 0 1 98,18",b.brand); dot(ctx,146,cy+18,7,b.brand); }
     return 17+H+17;
   },
   async cta(ctx,f){
-    const b=state.banner;
+    const b=TB();
     const h=text(ctx,{t:f.title,x:24,y:17,w:552,size:22,weight:700,color:b.ink,align:"center"});
     const top=h? 17+h+14 : 17;
     ctx.font=tFontCss(f.button,700,18); const bw=Math.min(552,Math.max(340,ctx.measureText(f.button||"").width/S+64));
     const bx=300-bw/2, bh=text(document.createElement("canvas").getContext("2d"),{t:f.button,x:bx+24,y:0,w:bw-48,size:18,weight:700});
     const H=Math.max(56,bh+34.8);
-    rect(ctx,bx,top,bw,H,28,b.brand);
-    text(ctx,{t:f.button,x:bx+24,y:top+(H-bh)/2,w:bw-48,size:18,weight:700,color:"#ffffff",align:"center"});
+    rect(ctx,bx,top,bw,H,28,b.btn);
+    text(ctx,{t:f.button,x:bx+24,y:top+(H-bh)/2,w:bw-48,size:18,weight:700,color:b.btnInk,align:"center"});
     return top+H+19;
   },
   async closing(ctx,f){
-    const h=text(ctx,{t:f.text,x:24,y:19,w:552,size:18,color:state.banner.ink,lh:1.5});
+    const h=text(ctx,{t:f.text,x:24,y:19,w:552,size:18,color:TB().text,lh:1.5});
     return 19+h+21.4;
   },
   async signature(ctx,f){
-    const h=text(ctx,{t:f.text,x:24,y:22,w:552,size:18,weight:700,color:state.banner.brand});
+    const h=text(ctx,{t:f.text,x:24,y:22,w:552,size:18,weight:700,color:TB().brand});
     return 22+h+28.6;
   },
   async footer(ctx,f){
-    const b=state.banner, logo=await loadImg("logo.png");
+    const b=TB(), logo=await loadImg("logo.png");
     rect(ctx,24,20,552,2,0,b.soft);
     logoBox(ctx,logo,252,36,96,92);
     let y=138;
@@ -603,7 +608,11 @@ const R = {
     rect(ctx,467.5,15+H/2-47.5,95,95,16,"#ffffff");
     blend(ctx,icon,475,15+H/2-40,80,79);
     text(ctx,{t:f.title,x:65,y:50,w:380,size:30,weight:700,color:b.headInk});
-    text(ctx,{t:sub,x:65,y:subTop,w:380,size:14,color:b.headSub});
+    const [sa,sr]=splitSub(sub);
+    if(b.subAccent && sa){ ctx.font=tFontCss(sub,700,14); const wa=ctx.measureText(sa+" ").width/S;
+      text(ctx,{t:restyle(sub,sa),x:65,y:subTop,w:380,size:14,weight:700,color:b.subAccent});
+      text(ctx,{t:restyle(sub,sr),x:65,y:subTop,w:380-wa,size:14,color:b.headSub}); }
+    else text(ctx,{t:sub,x:65,y:subTop,w:380,size:14,color:b.headSub});
     return 15+H+15;
   },
   async gpara(ctx,f){
@@ -689,29 +698,31 @@ async function renderBlock(blk){
 
 /* ---------- banner ---------- */
 async function drawBanner(canvas,{bare=false}={}){
-  const b = styled(state.banner,state.banner.st), ctx = canvas.getContext("2d");
+  const b = styled(state.banner,state.banner.st), T = TB(), ctx = canvas.getContext("2d");
   await loadFonts();
   const logo = await loadImg("logo.png");
   ctx.save(); ctx.clearRect(0,0,1200,400);
-  ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,1200,400);
-  if(b.decor){
+  ctx.fillStyle=T.bannerBg; ctx.fillRect(0,0,1200,400);
+  if(T.decor){
     ctx.fillStyle=b.soft; ctx.beginPath(); ctx.arc(90,290,250,0,Math.PI*2); ctx.fill();
     ctx.fillStyle=b.pill; ctx.beginPath(); ctx.arc(234,78,26,0,Math.PI*2); ctx.fill();
     ctx.strokeStyle=b.brand; ctx.lineWidth=6; ctx.lineCap="round";
     ctx.beginPath(); ctx.moveTo(280,188); ctx.lineTo(112,188); ctx.quadraticCurveTo(86,188,86,214); ctx.lineTo(86,236); ctx.stroke();
     ctx.fillStyle=b.brand; ctx.beginPath(); ctx.arc(88,240,14,0,Math.PI*2); ctx.fill();
   }
-  if(bare){ ctx.fillStyle=b.brand; ctx.fillRect(0,388,1200,12); ctx.restore(); return; }
+  if(bare){ ctx.fillStyle=T.strip; ctx.fillRect(0,388,1200,12); ctx.restore(); return; }
+  // on a dark banner the logo (drawn on white) sits on a white rounded tile
+  if(T.logoTile){ ctx.fillStyle="#ffffff"; ctx.beginPath(); ctx.roundRect(872,54,312,276,32); ctx.fill(); }
   ctx.drawImage(logo,884,66,288,252);
   ctx.direction="rtl"; ctx.textAlign="right"; ctx.textBaseline="top";
-  const Rx=868, maxW=560;
-  ctx.fillStyle=b.ink; fitFont(ctx,b.title,700,tSize(b.title,48),tFont(b.title),maxW); ctx.fillText(b.title,Rx,90);
-  ctx.fillStyle=b.brand; fitFont(ctx,b.slogan,400,tSize(b.slogan,32),tFont(b.slogan),maxW); ctx.fillText(b.slogan,Rx,174);
-  const t=pillText(b); fitFont(ctx,t,700,26,b.font,maxW-56);
+  const Rx=T.logoTile?844:868, maxW=560, hf=BAL()&&!FONTS.includes(b.title?.font);
+  ctx.fillStyle=T.bannerTitle; fitFont(ctx,b.title,hf?400:700,tSize(b.title,48),hf?HEAD_FONT:tFont(b.title),maxW); ctx.fillText(b.title,Rx,90);
+  ctx.fillStyle=T.slogan; fitFont(ctx,b.slogan,400,tSize(b.slogan,32),tFont(b.slogan),maxW); ctx.fillText(b.slogan,Rx,174);
+  const t=pillText(b); fitFont(ctx,t,700,26,T.font,maxW-56);
   const w=ctx.measureText(t).width+56;
-  ctx.fillStyle=b.pill; ctx.beginPath(); ctx.roundRect(Rx-w,248,w,60,30); ctx.fill();
-  ctx.fillStyle=b.ink; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(t,Rx-w/2,279);
-  ctx.fillStyle=b.brand; ctx.fillRect(0,388,1200,12);
+  ctx.fillStyle=T.pill; ctx.beginPath(); ctx.roundRect(Rx-w,248,w,60,30); ctx.fill();
+  ctx.fillStyle=T.ink; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(t,Rx-w/2,279);
+  ctx.fillStyle=T.strip; ctx.fillRect(0,388,1200,12);
   ctx.restore();
 }
 
@@ -991,6 +1002,10 @@ function P(text,{size=16,weight=400,color,lh=1.5,align="right",mt=0,extra=""}={}
   const head=isHead(text,weight,size), fam=head?`'${HEAD_FONT}',${FONT(text)}`:FONT(text);
   return `<p style="margin:${mt}px 0 0;font-family:${fam};font-size:${tSize(text,size)}px;line-height:${lh};font-weight:${weight};${head?"font-synthesis:none;":""}color:${color||(weight>=700?TB().ink:TB().text)};text-align:${align};${extra}">${escBr(text)}</p>`;
 }
+// grid header subtitle; in "balanced" the "גיליון 11" part before the bar is bold in the accent colour
+function subH(sub,b){ const [a,r]=splitSub(sub);
+  if(!b.subAccent || !a) return P(sub,{size:14,lh:1.4,mt:10,color:b.headSub});
+  return `<p style="margin:10px 0 0;font-family:${FONT(sub)};font-size:${tSize(sub,14)}px;line-height:1.4;color:${b.headSub};text-align:right"><span style="color:${b.subAccent};font-weight:bold">${esc(a)}</span> ${esc(r)}</p>`; }
 const pillH = (label,bg,fg,size=13,h=23) => String(label??"").trim()
   ? `<span style="display:inline-block;background:${bg};color:${fg};font-family:${FONT(label)};font-size:${tSize(label,size)}px;font-weight:bold;line-height:${tSize(label,h)}px;padding:0 ${Math.round(h*0.6)}px;border-radius:${tSize(label,h)/2}px">${esc(label)}</span>` : "";
 const tr = (inner,pad="0",extra="") => `<tr><td dir="rtl" style="padding:${pad};text-align:right;${extra}">${inner}</td></tr>`;
@@ -1015,30 +1030,30 @@ const MAIL = {
   async banner(){
     const b=styled(state.banner,state.banner.st), bg=document.createElement("canvas"); bg.width=1200; bg.height=400; await drawBanner(bg,{bare:true});
     const bgUrl=await (async()=>{ pubProgress(`מעלה תמונות (${++pubCount})…`); return publishImage(bg); })();
-    const logo=await loadImg("logo.png"), logoUrl=await art(144,126,ctx=>{ rect(ctx,0,0,144,126,0,"#ffffff"); ctx.drawImage(logo,0,0,144*S,126*S); });
-    return `<tr><td background="${bgUrl}" bgcolor="#ffffff" height="200" style="background:#ffffff url('${bgUrl}') no-repeat 0 0;background-size:600px 200px;padding:0;height:200px">`+
+    const T=TB(), logo=await loadImg("logo.png"), logoUrl=await art(144,126,ctx=>{ rect(ctx,0,0,144,126,T.logoTile?14:0,"#ffffff"); ctx.drawImage(logo,0,0,144*S,126*S); });
+    return `<tr><td background="${bgUrl}" bgcolor="${T.bannerBg}" height="200" style="background:${T.bannerBg} url('${bgUrl}') no-repeat 0 0;background-size:600px 200px;padding:0;height:200px">`+
       cols([[img(logoUrl,144,126,"AutoSuccess"),"width:144px;padding:33px 14px 0 8px;vertical-align:top"],
-            [P(b.title,{size:24,weight:700,lh:1.2})+P(b.slogan,{size:16,color:b.brand,mt:14})+`<div style="margin-top:16px">${pillH(pillText(b),b.pill,b.ink,13,30)}</div>`,"vertical-align:top;padding-top:44px"],
+            [P(b.title,{size:24,weight:700,lh:1.2,color:T.bannerTitle})+P(b.slogan,{size:16,color:T.slogan,mt:14})+`<div style="margin-top:16px">${pillH(pillText(b),T.pill,T.ink,13,30)}</div>`,"vertical-align:top;padding-top:44px"],
             ["","width:134px"]])+`</td></tr>`;
   },
-  async header(){ const b=state.banner;
+  async header(){ const b=TB();
     return tr(card(cols([[img(await logoArt("#ffffff"),96,92,"AutoSuccess"),"width:96px;vertical-align:middle"],["",""],
       [P(`דיוור #${b.issue}\n${dateText(b)}`,{size:14,lh:1.5}),"width:200px;vertical-align:middle"]]),
       {bg:"#ffffff",radius:16,pad:"6px 8px 6px 24px",border:`border-radius:16px 16px 0 0;border-bottom:3px solid ${b.brand};`}),"24px 24px 15px"); },
-  async hero(f,blk){ const b=state.banner;
+  async hero(f,blk){ const b=TB();
     const deco = b.decor ? img(await art(136,28,ctx=>{ curve(ctx,6,1,"M128,2 H18 A16,16 0 0 0 2,18",b.brand); dot(ctx,8,19,7,b.brand); }),136,28,"","margin-top:22px") : "";
     const photo = blk.photo ? img(await photoArt(blk.photo,196,244),196,244,f.title) : "";
     return tr(card(cols([[pillH(f.tag,b.pill,b.ink,14,34)+P(f.title,{size:31,weight:700,lh:1.15,mt:14})+P(f.text,{size:17,lh:1.4,mt:18})+deco,"vertical-align:top"],
       ["","width:12px"],[photo,"width:196px;vertical-align:top"]]),{bg:b.soft,radius:24,pad:"28px 24px"}),"16px 24px 20px"); },
-  async text(f){ const b=state.banner;
-    return tr((f.title?P(f.title,{size:28,weight:700,lh:1.2})+`<div style="width:70px;height:3px;line-height:3px;font-size:0;background:${b.brand};margin:11px 0 14px auto"></div>`:"")+P(f.text,{size:18}),"20px 24px"); },
+  async text(f){ const b=TB();
+    return tr((f.title?P(f.title,{size:28,weight:700,lh:1.2})+`<div style="width:70px;height:3px;line-height:3px;font-size:0;background:${b.accent};margin:11px 0 14px auto"></div>`:"")+P(f.text,{size:18}),"20px 24px"); },
   async image(f,blk){ return tr((blk.photo?img(await photoArt(blk.photo,552,296),552,296,f.caption):"")+P(f.caption,{size:14,color:MUTED,mt:10}),"20px 24px 18px"); },
-  async steps(f){ const b=state.banner;
+  async steps(f){ const b=TB();
     const items=[1,2,3].map(n=>[f["s"+n],f["d"+n]]).filter(([s,d])=>(s||"").trim()||(d||"").trim());
     return tr(P(f.title,{size:26,weight:700,lh:1.4})+items.map(([s,d],i)=>`<div style="margin-top:${i?20:14}px">`+cols([
-      [`<div style="width:40px;height:40px;line-height:40px;border-radius:20px;background:${b.brand};color:#ffffff;font-family:${FONT()};font-size:18px;font-weight:bold;text-align:center">${i+1}</div>`,"width:40px;vertical-align:top"],
+      [`<div style="width:40px;height:40px;line-height:40px;border-radius:20px;background:${b.brand};color:${b.stepNum};font-family:${FONT()};font-size:18px;font-weight:bold;text-align:center">${i+1}</div>`,"width:40px;vertical-align:top"],
       ["","width:16px"],[P(s,{size:20,weight:700,lh:1.4})+P(d,{size:16,lh:1.4}),"vertical-align:top"]])+`</div>`).join(""),"20px 24px 16px"); },
-  async insight(f,blk){ const b=state.banner;
+  async insight(f,blk){ const b=TB();
     const deco = b.decor ? `<div style="text-align:left;margin-top:16px">${img(await art(108,28,ctx=>{ curve(ctx,1,1,"M0,2 H82 A16,16 0 0 1 98,18",b.brand); dot(ctx,99,19,7,b.brand); }),108,28,"","display:inline-block")}</div>` : "";
     const words=P(f.label,{size:13,weight:700,color:b.brand})+P(f.title,{size:25,weight:700,lh:1.4,mt:4})+P(f.text,{size:17,lh:1.45,mt:8});
     const side=await sideCells(blk,f,180);
@@ -1046,8 +1061,8 @@ const MAIL = {
     return tr(card(inner,{bg:b.soft,radius:20,pad:"22px 24px 20px"}),"17px 24px"); },
   async cta(f){ return tr(P(f.title,{size:22,weight:700,lh:1.4,align:"center"})+`<div style="margin-top:14px">${button(f.button,f.link,18)}</div>`,"17px 24px 19px","text-align:center;"); },
   async closing(f){ return tr(P(f.text,{size:18}),"19px 24px 21px"); },
-  async signature(f){ return tr(P(f.text,{size:18,weight:700,lh:1.4,color:state.banner.brand}),"22px 24px 28px"); },
-  async footer(f){ const b=state.banner, line=`<div style="height:2px;line-height:2px;font-size:0;background:${b.soft}"></div>`;
+  async signature(f){ return tr(P(f.text,{size:18,weight:700,lh:1.4,color:TB().brand}),"22px 24px 28px"); },
+  async footer(f){ const b=TB(), line=`<div style="height:2px;line-height:2px;font-size:0;background:${b.soft}"></div>`;
     return tr(line+`<div style="margin:14px 0 10px">${img(await logoArt(PAGE_BG),96,92,"AutoSuccess","margin:0 auto")}</div>`+
       P(f.tagline,{size:16,weight:700,lh:1.4,align:"center"})+P(f.links,{size:12,color:MUTED,align:"center",mt:8})+`<div style="margin-top:20px">${line}</div>`,"20px 24px 46px"); },
 
@@ -1057,7 +1072,7 @@ const MAIL = {
     const himg = /^https:\/\/app\.autosuccess\.cc\/nl-img\/[\w.-]+\.png$/.test(f.himg||"") ? tr(img(f.himg,600,220,f.title)) : "";
     const deco = b.decor ? `<div style="text-align:left;margin-top:6px">${img(await art(160,40,ctx=>wave(ctx,0,0,0.5,"M0,70 C60,70 90,10 160,10 C230,10 260,70 320,70",6,b.brand,0.45)),160,40,"","display:inline-block")}</div>` : "";
     return himg + tr(card(cols([[img(await iconBox(95,16,7.5),95,95,"AutoSuccess"),"width:95px;vertical-align:middle"],["","width:22px"],
-      [P(f.title,{size:30,weight:700,lh:1.2,color:b.headInk})+P(restyle(f.subtitle,(f.subtitle||"").replaceAll("{גיליון}",b.issue)),{size:14,lh:1.4,mt:10,color:b.headSub})+deco,"vertical-align:middle"]]),
+      [P(f.title,{size:30,weight:700,lh:1.2,color:b.headInk})+subH(restyle(f.subtitle,(f.subtitle||"").replaceAll("{גיליון}",b.issue)),b)+deco,"vertical-align:middle"]]),
       {bg:b.headBg,radius:18,pad:"26px 17px 10px 20px"}),"15px 20px"); },
   async gpara(f){ return tr(P(f.text,{size:16,lh:1.6}),"20px 40px"); },
   async gtip(f,blk){ const b=TB();
@@ -1240,7 +1255,6 @@ function bannerStyleRows(){
   }
 }
 function syncStyle(){
-  $("dStyleWrap").hidden = designOf(view)!=="grid";
   const bal=BAL();
   document.querySelectorAll("#dStyleWrap [data-style]").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.style===styleOf())));
   for(const id of ["font","decor","brand","ink","pill","soft","resetColors"]) $(id).disabled=bal;
@@ -1270,7 +1284,7 @@ function migrate(s){
               grid:  {blocks: d.grid?.blocks   ? fixBlocks(d.grid.blocks)   : GRID_START()} };
   // the "images as code" tab starts as a copy of the grid issue, then is edited on its own
   s.designs.gridcode={blocks: d.gridcode?.blocks ? fixBlocks(d.gridcode.blocks) : structuredClone(s.designs.grid.blocks)};
-  for(const k of ["grid","gridcode"]) if(d[k]?.style==="balanced") s.designs[k].style="balanced";
+  for(const k of ["master","grid","gridcode"]) if(d[k]?.style==="balanced") s.designs[k].style="balanced";
   return s;
 }
 
