@@ -1234,6 +1234,7 @@ $("saveBtn").addEventListener("click",async()=>{
       allBlocks().forEach(b=>{if(b.src===p) b.src=path; if(b.photo===p) b.photo=path; if(b.cphoto===p) b.cphoto=path;});
       delete pending[p];
     }
+    state.savedAt=new Date().toISOString();
     await call("api/state",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify(state)});
     dirty=false; try{localStorage.removeItem("draft");}catch(e){}
     setStatus("נשמר בשרת","ok");
@@ -1305,6 +1306,10 @@ function migrate(s){
   try{ const r=await fetch("data/state.json",{cache:"no-store"}); if(r.ok) state=await r.json(); }catch(e){}
   state=migrate(state);
   try{ const d=localStorage.getItem("draft"); if(d){ const draft=migrate(JSON.parse(d));
+    // the server was saved after this draft was started (another browser, or publish.js): the server wins,
+    // the old draft is kept aside under "draft-old"
+    if((draft.savedAt||"")!==(state.savedAt||"")){ localStorage.setItem("draft-old",d); localStorage.removeItem("draft");
+      throw new Error("stale draft"); }
     // a draft can point at uploads that were never saved; keep the saved block list in that case
     const unsaved=b=>[b.src,b.photo,b.cphoto].some(v=>(v||"").startsWith("pending/"));
     for(const k of Object.keys(draft.designs)) if(draft.designs[k].blocks.some(unsaved)) draft.designs[k].blocks=state.designs[k].blocks;
